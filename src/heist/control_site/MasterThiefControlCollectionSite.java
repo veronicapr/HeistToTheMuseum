@@ -12,6 +12,7 @@ import heist.enums.State_Thief;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.rmi.server.UnicastRemoteObject;
 import settings.HeistSettings;
 
 
@@ -26,7 +27,7 @@ import settings.HeistSettings;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public class MasterThiefControlCollectionSite implements It_MasterThief_ControlCollectionSite, It_Thief_ControlCollectionSite, Serializable  {
+public class MasterThiefControlCollectionSite extends UnicastRemoteObject implements It_MasterThief_ControlCollectionSite, It_Thief_ControlCollectionSite, Serializable  {
 
 	//========================================================================================================================//
 	/**
@@ -174,7 +175,6 @@ public class MasterThiefControlCollectionSite implements It_MasterThief_ControlC
 			GenericIO.writelnString("Master Thief Control and Collection Site bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Master Thief Control and Collection Site exception: " + ex.getMessage());
-			ex.printStackTrace();
 		}
 		// log full update
 		

@@ -75,7 +75,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	 */
 	public static void main(String[] args){
 		
-		if (args.length != 3) {
+		if (args.length != 2) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
 		} else {

@@ -1,5 +1,7 @@
 /*
- * Museum
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package heist.museum;
 
@@ -9,6 +11,7 @@ import genclass.GenericIO;
 import heist.museum.interfaces.It_MasterThief_Museum;
 import heist.museum.interfaces.It_Thief_Museum;
 import heist.repository.interfaces.It_Repository_Museum;
+import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -21,7 +24,7 @@ import java.rmi.server.UnicastRemoteObject;
  * @author Miguel Ferreira nmec 72583
  *
  */
-public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum, It_Thief_Museum {
+public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum, It_Thief_Museum, Serializable {
 
 	//========================================================================================================================//
 	// Museum Data
@@ -103,6 +106,8 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 			}
 		}
 		
+		//System.setProperty("java.rmi.server.hostname","192.168.50.34");
+		
 		try {
 			if (System.getSecurityManager() == null) {
 				System.setSecurityManager(new SecurityManager());
@@ -111,11 +116,12 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 
 			self = new Museum();
 			
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind(NAME, UnicastRemoteObject.exportObject(self, port_number));
+			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind(NAME, self);
 
 			GenericIO.writelnString("Museum bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Museum exception: " + ex.getMessage());
+			ex.printStackTrace();
 		}
 		
 		try {
@@ -123,8 +129,10 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 				.logLine_MuseumUpdateFull(self.rooms_paintings, self.rooms_distance);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
+			ex.printStackTrace();
 		} catch (NotBoundException ex) {
 			GenericIO.writelnString("Not Bound Exception (main log line):  " + ex.getMessage());
+			ex.printStackTrace();
 		}
 	}
 

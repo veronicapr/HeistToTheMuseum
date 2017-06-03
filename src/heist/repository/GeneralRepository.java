@@ -1,5 +1,7 @@
 /*
- * General Repository
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package heist.repository;
 
@@ -9,9 +11,14 @@ import genclass.TextFile;
 import heist.enums.State_MasterThief;
 import heist.enums.State_Thief;
 import heist.repository.interfaces.It_Repository_Museum;
+import java.io.Serializable;
+import java.rmi.AccessException;
+import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>
@@ -22,7 +29,7 @@ import java.rmi.server.UnicastRemoteObject;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public class GeneralRepository extends UnicastRemoteObject implements It_Repository_Museum {
+public class GeneralRepository extends UnicastRemoteObject implements It_Repository_Museum, Serializable {
 
 	//========================================================================================================================//
 	// Museum Data
@@ -62,8 +69,11 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 */
 	private final State_Thief[] thieves_states = new State_Thief[HeistSettings.TOTAL_THIEVES];
 	//========================================================================================================================//
-	// Master Thief
-	//========================================================================================================================//
+
+	/**
+	 * File manipulation class
+	 */
+	private final TextFile log = new TextFile();
 	/**
 	 * Master thief saved state
 	 */
@@ -79,10 +89,12 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 		super();
 		// initialise thief info
 		for (int thief_index = 0; thief_index < HeistSettings.TOTAL_THIEVES; thief_index++) {
+			thieves_states[thief_index] = State_Thief.OUTSIDE;
 			thieves_agility[thief_index] = 0;
 			thieves_canvas[thief_index] = 0;
 			thieves_assault_party_id[thief_index] = -1;
 		}
+		master_thief_state = State_MasterThief.PLANNING_THE_HEIST;
 		// start log
 		logStart();
 	}
@@ -106,10 +118,6 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 * Log file name
 	 */
 	private static String log_name;
-	/**
-	 * File manipulation class
-	 */
-	private final TextFile log = new TextFile();
 
 	/**
 	 * General repository server start, requires 4 argument.
@@ -122,7 +130,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 * </ul>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 4) {
+		if (args.length != 3) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			System.exit(1);
 		} else {
@@ -141,11 +149,20 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 		}
 		GenericIO.writelnString("Security manager was installed!");
 		
-		//TODO - Add latest code
+		// start
+		try {
+			self = new GeneralRepository();
+			LocateRegistry.getRegistry(registry_port_number).rebind("General_Repository", self);
+			GenericIO.writelnString("General repository bound and ready!");
+		} catch (RemoteException ex) {
+			GenericIO.writelnString("Regist remote exception: " + ex.getMessage());
+			ex.printStackTrace();
+			System.exit(1);
+		}
 	}
 
 	//========================================================================================================================//
-	// Log updates - Museum interface
+	// Log Print Methods
 	//========================================================================================================================//
 	/**
 	 * Log line containing full updated museum info
@@ -175,7 +192,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	}
 
 	//========================================================================================================================//
-	// Logging methods
+	// Logging Methods
 	//========================================================================================================================//
 	/**
 	 * Creates log and prints title and header.

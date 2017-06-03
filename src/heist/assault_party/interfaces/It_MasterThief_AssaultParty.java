@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * It MasterThief AssaultParty
  */
 package heist.assault_party.interfaces;
 
@@ -26,7 +24,6 @@ public interface It_MasterThief_AssaultParty extends Remote {
 	 * @param target_distance room distance
 	 * @throws java.rmi.RemoteException
 	 */
-	
 	void prepareAssaultParty(int target_room, int target_distance) throws RemoteException;
 
 }

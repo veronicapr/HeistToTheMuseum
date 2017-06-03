@@ -79,7 +79,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	 * </ul>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 3) {
+		if (args.length != 2) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
 		} else {

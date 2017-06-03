@@ -8,6 +8,8 @@ import genclass.GenericIO;
 import genclass.TextFile;
 import heist.enums.State_MasterThief;
 import heist.enums.State_Thief;
+import heist.repository.interfaces.It_Repository_AssaultParty;
+import heist.repository.interfaces.It_Repository_ConcentrationSite;
 import heist.repository.interfaces.It_Repository_Museum;
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -23,7 +25,8 @@ import java.rmi.server.UnicastRemoteObject;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public class GeneralRepository extends UnicastRemoteObject implements It_Repository_Museum, Serializable {
+public class GeneralRepository extends UnicastRemoteObject implements It_Repository_Museum, It_Repository_ConcentrationSite, It_Repository_AssaultParty, 
+		Serializable {
 
 	//========================================================================================================================//
 	// Museum Data
@@ -37,14 +40,18 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 */
 	private final int[] rooms_distance = new int[HeistSettings.TOTAL_ROOMS];
 	//========================================================================================================================//
-	// Assault Parties
+	// Assault Parties Data
 	//========================================================================================================================//
 	/**
-	 * Team members positions
+	 * Teams target room
+	 */
+	private final int[] team_target_room = new int[HeistSettings.TOTAL_TEAMS];
+	/**
+	 * Teams member positions
 	 */
 	private final int[][] team_positions = new int[HeistSettings.TOTAL_TEAMS][HeistSettings.TEAM_SIZE];
 	//========================================================================================================================//
-	// Thief
+	// Thief Data
 	//========================================================================================================================//
 	/**
 	 * Thieves assault party id
@@ -63,7 +70,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 */
 	private final State_Thief[] thieves_states = new State_Thief[HeistSettings.TOTAL_THIEVES];
 	//========================================================================================================================//
-	// Master Thief
+	// Master Thief Data
 	//========================================================================================================================//
 	/**
 	 * Master thief saved state
@@ -85,6 +92,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 			thieves_canvas[thief_index] = 0;
 			thieves_assault_party_id[thief_index] = -1;
 		}
+		// initialise master thief info
 		master_thief_state = State_MasterThief.PLANNING_THE_HEIST;
 		// start log
 		logStart();
@@ -98,10 +106,6 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 */
 	private static GeneralRepository self;
 	/**
-	 * File manipulation class
-	 */
-	private final TextFile log = new TextFile();
-	/**
 	 * Registry port number
 	 */
 	private static String registry_host_name;
@@ -113,6 +117,10 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 * Log file name
 	 */
 	private static String log_name;
+	/**
+	 * File manipulation class
+	 */
+	private final TextFile log = new TextFile();
 
 	/**
 	 * General repository server start, requires 4 argument.
@@ -150,7 +158,6 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 			GenericIO.writelnString("General repository bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Regist remote exception: " + ex.getMessage());
-			ex.printStackTrace();
 			System.exit(1);
 		}
 		// ready message
@@ -158,28 +165,80 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	}
 
 	//========================================================================================================================//
+	// Log Updates - AssaultParty
+	//========================================================================================================================//
+	/**
+	 * Log line containing updated info over a team target room.
+	 *
+	 * @param team_id team identification
+	 * @param target_room team updated target room
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public synchronized final void logLine_AssaultPartyUpdateRoom(int team_id, int target_room) throws RemoteException {
+		this.team_target_room[team_id] = target_room;
+		logLine();
+	}
+
+	/**
+	 * Log line containing updated info over a team element positions.
+	 *
+	 * @param team_id team identification
+	 * @param team_members team distances order
+	 * @param team_positions updated team distances
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public synchronized final void logLine_AssaultPartyUpdatePositions(int team_id, int[] team_members, int[] team_positions) throws RemoteException {
+		for (int index = 0; index < HeistSettings.TEAM_SIZE; index++) {
+			this.team_positions[team_id][team_members[index] % HeistSettings.TEAM_SIZE] = team_positions[index];
+		}
+		logLine();
+	}
+
+	//========================================================================================================================//
+	// Log Updates - ConcentrationSite
+	//========================================================================================================================//
+	/**
+	 * Finalises log, updates all states from master thief and thieves to its final states, log a line with updated info and the final messages.
+	 *
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public synchronized final void logFinish_ConcentrationSiteUpdate() throws RemoteException {
+		this.master_thief_state = State_MasterThief.PRESENTING_THE_REPORT;
+		for (int index = 0; index < HeistSettings.TEAM_SIZE; index++) {
+			thieves_states[index] = State_Thief.HEAR_REPORT;
+		}
+		logLine();
+		logFinish();
+	}
+
+	//========================================================================================================================//
 	// Log Updates - Museum
 	//========================================================================================================================//
 	/**
-	 * Log line containing full updated museum info
+	 * Log line containing full updated museum info.
 	 *
 	 * @param rooms_paintings rooms current paintings full info
 	 * @param rooms_distance rooms distance full info
+	 * @throws java.rmi.RemoteException
 	 */
 	@Override
 	public synchronized final void logLine_MuseumUpdateFull(int[] rooms_paintings, int[] rooms_distance) throws RemoteException {
-		for (int room_index = 0; room_index < HeistSettings.TOTAL_ROOMS; room_index++) {
-			this.rooms_paintings[room_index] = rooms_paintings[room_index];
-			this.rooms_distance[room_index] = rooms_distance[room_index];
+		for (int index = 0; index < HeistSettings.TOTAL_ROOMS; index++) {
+			this.rooms_paintings[index] = rooms_paintings[index];
+			this.rooms_distance[index] = rooms_distance[index];
 		}
 		logLine();
 	}
 
 	/**
-	 * Log line containing updated museum info over a single room
+	 * Log line containing updated museum info over a single room.
 	 *
 	 * @param room_index to be updated room index
 	 * @param room_paintings current number of paintings in the room
+	 * @throws java.rmi.RemoteException
 	 */
 	@Override
 	public synchronized final void logLine_MuseumUpdateSingle(int room_index, int room_paintings) throws RemoteException {
@@ -203,11 +262,6 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 * Ends the log by adding a fixed sentence and the legend.
 	 */
 	public synchronized final void logFinish() {
-		this.master_thief_state = State_MasterThief.PRESENTING_THE_REPORT;
-		for (int thief_index = 0; thief_index < HeistSettings.TEAM_SIZE; thief_index++) {
-			thieves_states[thief_index] = State_Thief.HEAR_REPORT;
-		}
-
 		String end = String.format("My friends, tonight's effort produced %1$2d priceless paintings!\n", 0);
 
 		log.openForAppending(null, log_name);
@@ -313,7 +367,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 
 		for (int team_index = 0; team_index < HeistSettings.TOTAL_TEAMS; team_index++) {
 			line_1 += "    ";
-			line_2 += String.format("%1$2d  ", team_index);
+			line_2 += String.format("%1$2d  ", team_target_room[team_index]);
 
 			for (int thief_index = team_index * HeistSettings.TEAM_SIZE; thief_index < (team_index + 1) * HeistSettings.TEAM_SIZE; thief_index++) {
 				line_1 += String.format("%1$4s %2$1s %3$2d    ",

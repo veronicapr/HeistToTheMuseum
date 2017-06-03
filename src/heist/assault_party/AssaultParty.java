@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Assault Party
  */
 package heist.assault_party;
 
@@ -9,13 +7,14 @@ import genclass.GenericIO;
 import heist.assault_party.interfaces.It_Thief_AssaultParty;
 import heist.assault_party.interfaces.It_MasterThief_AssaultParty;
 import heist.enums.State_Thief;
+import heist.repository.interfaces.It_Repository_AssaultParty;
 import java.io.Serializable;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Random;
 import settings.HeistSettings;
-
 
 /**
  * Thieves assault party. Controls the excursion of its members from on point to another in a orderly way.
@@ -26,24 +25,12 @@ import settings.HeistSettings;
 public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_AssaultParty, It_Thief_AssaultParty, Serializable {
 
 	//========================================================================================================================//
+	// Assault Party Data
+	//========================================================================================================================//
 	/**
 	 * Assault party id
 	 */
-	final int id;
-
-	/**
-	 * Random number generator
-	 */
-	private final Random random;
-	//========================================================================================================================//
-	/**
-	 * Assault party max members
-	 */
-	private final int team_size =  HeistSettings.TEAM_SIZE;
-	/**
-	 * Max gap between members
-	 */
-	private final int max_gap = HeistSettings.MAX_GAP;
+	private final int id;
 	/**
 	 * Target room number
 	 */
@@ -52,7 +39,6 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 * Target room distance
 	 */
 	private int target_distance;
-	//========================================================================================================================//
 	/**
 	 * Excursion start signal
 	 */
@@ -61,16 +47,17 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 * Excursion end signal
 	 */
 	private boolean return_signal;
-	//========================================================================================================================//
 	/**
 	 * Team members positions, always in crescent order
 	 */
-	final int[] team_distances = new int[HeistSettings.TEAM_SIZE];
+	private final int[] team_distances = new int[HeistSettings.TEAM_SIZE];
 	/**
 	 * Team members id, ordered according to positions
 	 */
-	final int[] team_members = new int[HeistSettings.TOTAL_TEAMS];
+	private final int[] team_members = new int[HeistSettings.TOTAL_TEAMS];
 
+	//========================================================================================================================//
+	// Assault Party Constructor
 	//========================================================================================================================//
 	/**
 	 * Constructor for the assault party.
@@ -78,22 +65,27 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 * @param id assault party id
 	 * @throws java.rmi.RemoteException
 	 */
-	public AssaultParty(int id) throws RemoteException {
+	private AssaultParty(int id) throws RemoteException {
 		super();
 		this.id = id;
-
 		this.random = new Random();
-
-		for (int index = 0; index < this.team_size; index++) {
+		for (int index = 0; index < HeistSettings.TEAM_SIZE; index++) {
 			this.team_members[index] = -1;
 			this.team_distances[index] = 0;
 		}
 	}
 
+	//========================================================================================================================//
+	// Assault Party server info and main
+	//========================================================================================================================//
+	/**
+	 * Random number generator
+	 */
+	private final Random random;
 	/**
 	 * Assault Party object reference [singleton]
 	 */
-	private static AssaultParty self;
+	private static AssaultParty[] self;
 	/**
 	 * Registry host name
 	 */
@@ -102,6 +94,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 * Registry port number
 	 */
 	private static int registry_port_number;
+
 	/**
 	 * AssaultParty server start, requires 3 argument.
 	 *
@@ -111,9 +104,8 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
-	
-	public static void main(String[] args){
-		if (args.length != 3) {
+	public static void main(String[] args) {
+		if (args.length != 2) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
 		} else {
@@ -129,24 +121,22 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 			System.setSecurityManager(new SecurityManager());
 		}
 		GenericIO.writelnString("Security manager was installed!");
-		
 		// regist Assault Party 
 		try {
-			//self = new AssaultParty();
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Assault Party", self);
-			GenericIO.writelnString("Assault Party bound!");
+			self = new AssaultParty[HeistSettings.TOTAL_TEAMS];
+			for (int index = 0; index < HeistSettings.TOTAL_TEAMS; index++) {
+				self[index] = new AssaultParty(index);
+				LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Assault_Party_" + index, self[index]);
+				GenericIO.writelnString("Assault Party " + index + " bound!");
+			}
 		} catch (RemoteException ex) {
-			GenericIO.writelnString("Assault Party exception: " + ex.getMessage());
-			ex.printStackTrace();
+			GenericIO.writelnString("Regist exception: " + ex.getMessage());
 		}
-		// log full update
-		
 		// ready message
 		GenericIO.writelnString("Assault Party server ready!");
-		
+
 	}
 
-	
 	//========================================================================================================================//
 	// Master thief methods
 	//========================================================================================================================//
@@ -165,6 +155,14 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 		this.target_distance = target_distance;
 		this.start_signal = false;
 		this.return_signal = false;
+		try {
+			((It_Repository_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+					.logLine_AssaultPartyUpdateRoom(this.id, target_room);
+		} catch (RemoteException ex) {
+			GenericIO.writelnString("Remote Exception (prepare assault party): " + ex.getMessage());
+		} catch (NotBoundException ex) {
+			GenericIO.writelnString("Not Bound Exception (prepare assault party):  " + ex.getMessage());
+		}
 	}
 
 	//========================================================================================================================//
@@ -180,7 +178,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	public synchronized int prepareExcursion(int thief_id) {
 		boolean all_prepared = true;
 		// changes his position to 0 and adds his id to the team if not there
-		for (int index = 0; index < this.team_size; index++) {
+		for (int index = 0; index < HeistSettings.TEAM_SIZE; index++) {
 			if (this.team_members[index] == thief_id) {
 				this.team_distances[index] = 0;
 				break;
@@ -192,7 +190,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 			}
 		}
 		// checks if all memebers are prepared
-		for (int index = 0; index < this.team_size; index++) {
+		for (int index = 0; index < HeistSettings.TEAM_SIZE; index++) {
 			if (!(this.team_members[index] != -1 && this.team_distances[index] == 0)) {
 				all_prepared = false;
 				break;
@@ -237,7 +235,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 		int thief_index;
 		int advance;
 		// finds his position in the team
-		for (thief_index = 0; thief_index < this.team_size; thief_index++) {
+		for (thief_index = 0; thief_index < HeistSettings.TEAM_SIZE; thief_index++) {
 			if (this.team_members[thief_index] == thief_id) {
 				break;
 			}
@@ -246,19 +244,19 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 		advance = this.team_distances[thief_index] + random.nextInt(thief_agility) + 1;
 		// if he is not the last one, sees if is advancement passes the gap over the one behind
 		if (!(thief_index == 0)) {
-			if (advance > this.team_distances[thief_index - 1] + this.max_gap) {
-				advance = this.team_distances[thief_index - 1] + this.max_gap;
+			if (advance > this.team_distances[thief_index - 1] + HeistSettings.MAX_GAP) {
+				advance = this.team_distances[thief_index - 1] + HeistSettings.MAX_GAP;
 			}
 		}
 		// if he is not the last or first one, sees if the next thief position is not over the previous + gap 
-		if (!(thief_index + 1 == this.team_size) && !(thief_index == 0)) {
-			if (this.team_distances[thief_index + 1] > this.team_distances[thief_index - 1] + this.max_gap) {
-				advance = this.team_distances[thief_index - 1] + this.max_gap;
+		if (!(thief_index + 1 == HeistSettings.TEAM_SIZE) && !(thief_index == 0)) {
+			if (this.team_distances[thief_index + 1] > this.team_distances[thief_index - 1] + HeistSettings.MAX_GAP) {
+				advance = this.team_distances[thief_index - 1] + HeistSettings.MAX_GAP;
 			}
 		}
 		// goes to the last free position (further away) it finds in the line according to how much he can move
-		if (!(thief_index + 1 == this.team_size)) {
-			for (int current_index = ((thief_index + this.max_gap > this.team_size - 1) ? this.team_size - 1 : thief_index + this.max_gap); current_index > thief_index; current_index--) {
+		if (!(thief_index + 1 == HeistSettings.TEAM_SIZE)) {
+			for (int current_index = ((thief_index + HeistSettings.MAX_GAP > HeistSettings.TEAM_SIZE - 1) ? HeistSettings.TEAM_SIZE - 1 : thief_index + HeistSettings.MAX_GAP); current_index > thief_index; current_index--) {
 				if (advance < this.team_distances[current_index]) {
 					continue;
 				}
@@ -276,7 +274,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 		// if he moves from his location, reorganiss the team positions, and logs the change
 		if (advance != this.team_distances[thief_index]) {
 			this.team_distances[thief_index] = advance;
-			for (int index = thief_index; index < this.team_size - 1; index++) {
+			for (int index = thief_index; index < HeistSettings.TEAM_SIZE - 1; index++) {
 				if (this.team_distances[index + 1] < this.team_distances[index]) {
 					int tmp_distance = this.team_distances[index];
 					int tmp_thief_id = this.team_members[index];
@@ -288,7 +286,14 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 				}
 				break;
 			}
-			//repository.logLine(state, thief_id, thief_agility);
+			try {
+				((It_Repository_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+						.logLine_AssaultPartyUpdatePositions(thief_id, this.team_members, this.team_distances);
+			} catch (RemoteException ex) {
+				GenericIO.writelnString("Remote Exception (crawl in): " + ex.getMessage());
+			} catch (NotBoundException ex) {
+				GenericIO.writelnString("Not Bound Exception (crawl in):  " + ex.getMessage());
+			}
 		}
 		// decides whenever he reached the room or continues to crawl to it
 		if (this.team_distances[thief_index] == this.target_distance) {
@@ -307,7 +312,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	public synchronized boolean reverseDirection() {
 		boolean all_at_room = true;
 		// Verifies if everyone has arrived
-		for (int thief_index = 0; thief_index < this.team_size; thief_index++) {
+		for (int thief_index = 0; thief_index < HeistSettings.TEAM_SIZE; thief_index++) {
 			if (this.team_distances[thief_index] != this.target_distance) {
 				all_at_room = false;
 				break;
@@ -353,7 +358,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 		int thief_index;
 		int advance;
 		// finds his position in team
-		for (thief_index = 0; thief_index < this.team_size; thief_index++) {
+		for (thief_index = 0; thief_index < HeistSettings.TEAM_SIZE; thief_index++) {
 			if (this.team_members[thief_index] == thief_id) {
 				break;
 			}
@@ -361,20 +366,20 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 		// calculates his advancement
 		advance = this.team_distances[thief_index] - random.nextInt(thief_agility) - 1;
 		// if he is not the first one, sees if is advancement passes the gap over the one behind
-		if (!(thief_index + 1 == this.team_size)) {
-			if (advance < this.team_distances[thief_index + 1] - this.max_gap) {
-				advance = this.team_distances[thief_index + 1] - this.max_gap;
+		if (!(thief_index + 1 == HeistSettings.TEAM_SIZE)) {
+			if (advance < this.team_distances[thief_index + 1] - HeistSettings.MAX_GAP) {
+				advance = this.team_distances[thief_index + 1] - HeistSettings.MAX_GAP;
 			}
 		}
 		// if he is not the first or last one, sees if the next thief position is not over the previous + gap
-		if (!(thief_index == 0) && !(thief_index + 1 == this.team_size)) {
-			if (this.team_distances[thief_index - 1] < this.team_distances[thief_index + 1] - this.max_gap) {
-				advance = this.team_distances[thief_index + 1] - this.max_gap;
+		if (!(thief_index == 0) && !(thief_index + 1 == HeistSettings.TEAM_SIZE)) {
+			if (this.team_distances[thief_index - 1] < this.team_distances[thief_index + 1] - HeistSettings.MAX_GAP) {
+				advance = this.team_distances[thief_index + 1] - HeistSettings.MAX_GAP;
 			}
 		}
 		// goes to the last free position (further away) it finds in the line according to how much he can move
 		if (!(thief_index == 0)) {
-			for (int current_index = ((thief_index - this.max_gap < 0) ? 0 : thief_index - this.max_gap); current_index < thief_index; current_index++) {
+			for (int current_index = ((thief_index - HeistSettings.MAX_GAP < 0) ? 0 : thief_index - HeistSettings.MAX_GAP); current_index < thief_index; current_index++) {
 				if (this.team_distances[current_index] < advance) {
 					continue;
 				}
@@ -404,7 +409,14 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 				}
 				break;
 			}
-			//repository.logLine(state, thief_id, thief_agility);
+			try {
+				((It_Repository_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+						.logLine_AssaultPartyUpdatePositions(thief_id, this.team_members, this.team_distances);
+			} catch (RemoteException ex) {
+				GenericIO.writelnString("Remote Exception (crawl out): " + ex.getMessage());
+			} catch (NotBoundException ex) {
+				GenericIO.writelnString("Not Bound Exception (crawl out):  " + ex.getMessage());
+			}
 		}
 		// decides whenever he reached the concentration site or continues to crawl to it
 		if (this.team_distances[thief_index] == 0) {

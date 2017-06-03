@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * General Repository
  */
 package heist.repository;
 
@@ -12,13 +10,9 @@ import heist.enums.State_MasterThief;
 import heist.enums.State_Thief;
 import heist.repository.interfaces.It_Repository_Museum;
 import java.io.Serializable;
-import java.rmi.AccessException;
-import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * <p>
@@ -69,11 +63,8 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 */
 	private final State_Thief[] thieves_states = new State_Thief[HeistSettings.TOTAL_THIEVES];
 	//========================================================================================================================//
-
-	/**
-	 * File manipulation class
-	 */
-	private final TextFile log = new TextFile();
+	// Master Thief
+	//========================================================================================================================//
 	/**
 	 * Master thief saved state
 	 */
@@ -107,9 +98,13 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 */
 	private static GeneralRepository self;
 	/**
-	 * Server port number
+	 * File manipulation class
 	 */
-	private static int repository_port_number;
+	private final TextFile log = new TextFile();
+	/**
+	 * Registry port number
+	 */
+	private static String registry_host_name;
 	/**
 	 * Registry port number
 	 */
@@ -124,9 +119,9 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
+	 * <li>registry host name</li>
 	 * <li>registry port number</li>
 	 * <li>general repository log name</li>
-	 * <li>server port number</li>
 	 * </ul>
 	 */
 	public static void main(String[] args) {
@@ -135,9 +130,9 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 			System.exit(1);
 		} else {
 			try {
-				registry_port_number = Integer.parseInt(args[0]);
-				log_name = args[1];
-				repository_port_number = Integer.parseInt(args[2]);
+				registry_host_name = args[0];
+				registry_port_number = Integer.parseInt(args[1]);
+				log_name = args[2];
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 				System.exit(1);
@@ -148,21 +143,22 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 			System.setSecurityManager(new SecurityManager());
 		}
 		GenericIO.writelnString("Security manager was installed!");
-		
-		// start
+		// regist repository
 		try {
 			self = new GeneralRepository();
-			LocateRegistry.getRegistry(registry_port_number).rebind("General_Repository", self);
-			GenericIO.writelnString("General repository bound and ready!");
+			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("General_Repository", self);
+			GenericIO.writelnString("General repository bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Regist remote exception: " + ex.getMessage());
 			ex.printStackTrace();
 			System.exit(1);
 		}
+		// ready message
+		GenericIO.writelnString("General repository bound!");
 	}
 
 	//========================================================================================================================//
-	// Log Print Methods
+	// Log Updates - Museum
 	//========================================================================================================================//
 	/**
 	 * Log line containing full updated museum info

@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Museum
  */
 package heist.museum;
 
@@ -42,8 +40,8 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	// Museum instance
 	//========================================================================================================================//
 	/**
-	 * Generates the Museum by randomising a value of distance for each museum room between given minimum and maximum distance and giving a number of paintings equal to
-	 * room index.
+	 * Generates the Museum by randomising a value of distance for each museum room between given minimum and maximum distance and giving a number of paintings
+	 * equal to room index.
 	 */
 	private Museum() throws RemoteException {
 		super();
@@ -53,25 +51,15 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 			rooms_paintings[i] = i;
 			rooms_distance[i] = rand.nextInt((HeistSettings.MAX_DISTANCE - HeistSettings.MIN_DISTANCE) + 1) + HeistSettings.MIN_DISTANCE;
 		}
-		// logs line
-		// 
 	}
 
 	//========================================================================================================================//
 	// Museum server info and main
 	//========================================================================================================================//
 	/**
-	 * RMI registered name
-	 */
-	private static final String NAME = "Museum";
-	/**
 	 * Museum object reference [singleton]
 	 */
 	private static Museum self;
-	/**
-	 * Museum server port number
-	 */
-	private static int port_number;
 	/**
 	 * Registry host name
 	 */
@@ -80,14 +68,12 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	 * Registry port number
 	 */
 	private static int registry_port_number;
-	
 
 	/**
 	 * Museum server start, requires 3 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
-	 * <li>museum server port number</li>
 	 * <li>registry host name</li>
 	 * <li>registry port number</li>
 	 * </ul>
@@ -98,35 +84,30 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 			return;
 		} else {
 			try {
-				port_number = Integer.parseInt(args[0]);
-				registry_host_name = args[1];
-				registry_port_number = Integer.parseInt(args[2]);
+				registry_host_name = args[0];
+				registry_port_number = Integer.parseInt(args[1]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 			}
 		}
-		
-		//System.setProperty("java.rmi.server.hostname","192.168.50.34");
-		
+		// security manager
+		if (System.getSecurityManager() == null) {
+			System.setSecurityManager(new SecurityManager());
+		}
+		GenericIO.writelnString("Security manager was installed!");
+		// regist museum
 		try {
-			if (System.getSecurityManager() == null) {
-				System.setSecurityManager(new SecurityManager());
-			}
-			GenericIO.writelnString("Security manager was installed!");
-
 			self = new Museum();
-			
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind(NAME, self);
-
+			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Museum", self);
 			GenericIO.writelnString("Museum bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Museum exception: " + ex.getMessage());
 			ex.printStackTrace();
 		}
-		
+		// log full update
 		try {
-		((It_Repository_Museum) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-				.logLine_MuseumUpdateFull(self.rooms_paintings, self.rooms_distance);
+			((It_Repository_Museum) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+					.logLine_MuseumUpdateFull(self.rooms_paintings, self.rooms_distance);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
 			ex.printStackTrace();
@@ -134,6 +115,8 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 			GenericIO.writelnString("Not Bound Exception (main log line):  " + ex.getMessage());
 			ex.printStackTrace();
 		}
+		// ready message
+		GenericIO.writelnString("Museum server ready!");
 	}
 
 	//========================================================================================================================//

@@ -3,13 +3,16 @@
  */
 package heist.concentration_site.interfaces;
 
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
 /**
  * Contains the methods called by the thief in Ordinary Thieves Concentration Site.
  *
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public interface It_Thief_ConcentrationSite {
+public interface It_Thief_ConcentrationSite extends Remote {
 
 	/**
 	 * Sets thief in a waiting cycle where each time he is awoken checks if heist_complete flag is true, if not proceeds to verify if his team is in the
@@ -28,6 +31,7 @@ public interface It_Thief_ConcentrationSite {
 	 * <li>1 if team is prepared</li>
 	 * <li>0 if interrupted</li>
 	 * </ul>
+	 * @throws java.rmi.RemoteException
 	 */
-	int amINeeded(int assault_party_id);
+	int amINeeded(int assault_party_id) throws RemoteException;
 }

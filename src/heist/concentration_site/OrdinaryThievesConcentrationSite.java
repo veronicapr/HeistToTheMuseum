@@ -4,8 +4,13 @@
 package heist.concentration_site;
 
 
+import genclass.GenericIO;
 import heist.concentration_site.interfaces.It_MasterThief_ConcentrationSite;
 import heist.concentration_site.interfaces.It_Thief_ConcentrationSite;
+import java.io.Serializable;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.server.UnicastRemoteObject;
 import settings.HeistSettings;
 
 /**
@@ -14,7 +19,7 @@ import settings.HeistSettings;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public class OrdinaryThievesConcentrationSite implements It_MasterThief_ConcentrationSite, It_Thief_ConcentrationSite {
+public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implements It_MasterThief_ConcentrationSite, It_Thief_ConcentrationSite, Serializable {
 
 	//========================================================================================================================//
 	// Ordinary thieves data
@@ -35,9 +40,10 @@ public class OrdinaryThievesConcentrationSite implements It_MasterThief_Concentr
 
 	/**
 	 * Constructor for Ordinary Thieves Concentration Site, also forces initialisation of member_count at 0 and prepared_teams as false.
+	 * @throws java.rmi.RemoteException
 	 */
-	public OrdinaryThievesConcentrationSite() {
-
+	public OrdinaryThievesConcentrationSite() throws RemoteException {
+		super();
 		this.heist_complete = false;
 
 		for (int index = 0; index < HeistSettings.TOTAL_TEAMS; index++) {
@@ -46,6 +52,61 @@ public class OrdinaryThievesConcentrationSite implements It_MasterThief_Concentr
 		}
 	}
 
+	/**
+	 * Ordinary Thieves Concentration Site object reference [singleton]
+	 */
+	private static OrdinaryThievesConcentrationSite self;
+	/**
+	 * Registry host name
+	 */
+	private static String registry_host_name;
+	/**
+	 * Registry port number
+	 */
+	private static int registry_port_number;
+	/**
+	 * Ordinary Thieves Concentration Site server start, requires 3 argument.
+	 *
+	 * @param args program arguments should be:
+	 * <ul>
+	 * <li>registry host name</li>
+	 * <li>registry port number</li>
+	 * </ul>
+	 */
+	public static void main(String[] args){
+		
+		if (args.length != 3) {
+			GenericIO.writelnString("Wrong number of arguments!");
+			return;
+		} else {
+			try {
+				registry_host_name = args[0];
+				registry_port_number = Integer.parseInt(args[1]);
+			} catch (NumberFormatException ex) {
+				GenericIO.writelnString("Port number must be an integer!");
+			}
+		}
+		// security manager
+		if (System.getSecurityManager() == null) {
+			System.setSecurityManager(new SecurityManager());
+		}
+		GenericIO.writelnString("Security manager was installed!");
+		
+		// regist Ordinary Thieves Concentration Site
+		
+		try {
+			self = new OrdinaryThievesConcentrationSite();
+			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Ordinary Thieves Concentration Site", self);
+			GenericIO.writelnString("Ordinary Thieves Concentration Site bound!");
+		} catch (RemoteException ex) {
+			GenericIO.writelnString("Ordinary Thieves Concentration Site exception: " + ex.getMessage());
+			ex.printStackTrace();
+		}
+		// log full update
+		
+		// ready message
+		GenericIO.writelnString("Ordinary Thieves Concentration Site server ready!");
+	}
 	//========================================================================================================================//
 	// Master thief methods
 	//========================================================================================================================//

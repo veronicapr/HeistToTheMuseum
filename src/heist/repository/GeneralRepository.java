@@ -154,7 +154,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 			System.exit(1);
 		}
 		// ready message
-		GenericIO.writelnString("General repository bound!");
+		GenericIO.writelnString("General repository ready!");
 	}
 
 	//========================================================================================================================//

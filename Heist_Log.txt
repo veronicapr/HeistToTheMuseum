@@ -1,0 +1,7 @@
+Heist to the Museum - Description of the internal state
+
+MstT       Thief 01     Thief 02     Thief 03         Thief 04     Thief 05     Thief 06  
+Stat    Stat S MD    Stat S MD    Stat S MD        Stat S MD    Stat S MD    Stat S MD    
+           Assault party 01                           Assault party 02                    Museum  
+           Elem 01      Elem 02      Elem 03          Elem 01      Elem 02      Elem 03   Room 01 Room 02 Room 03 Room 04 Room 05 
+    RId   Id Pos Cv    Id Pos Cv    Id Pos Cv  RId   Id Pos Cv    Id Pos Cv    Id Pos Cv  NP DT   NP DT   NP DT   NP DT   NP DT   

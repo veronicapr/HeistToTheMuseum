@@ -160,7 +160,16 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 			this.rooms_paintings[target_room]--;
 		}
 		// logs line
-		// this.repository.logLine_MuseumUpdateSingle(target_room, rooms_paintings[target_room]);
+		try {
+			((It_Repository_Museum) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+					.logLine_MuseumUpdateSingle(target_room, self.rooms_paintings[target_room]);
+		} catch (RemoteException ex) {
+			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
+			ex.printStackTrace();
+		} catch (NotBoundException ex) {
+			GenericIO.writelnString("Not Bound Exception (main log line):  " + ex.getMessage());
+			ex.printStackTrace();
+		}
 		// returns stolen canvas
 		return stolen_canvas;
 	}

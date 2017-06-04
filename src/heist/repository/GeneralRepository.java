@@ -3,6 +3,7 @@
  */
 package heist.repository;
 
+import clock_vector.ClockVector;
 import settings.HeistSettings;
 import genclass.GenericIO;
 import genclass.TextFile;
@@ -86,6 +87,13 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 * Master thief saved state
 	 */
 	private State_MasterThief master_thief_state;
+	//========================================================================================================================//
+	// Vector clocks
+	//========================================================================================================================//
+	/**
+	 * Master thief and thieves clocks
+	 */
+	private final ClockVector[] clocks = new ClockVector[1 + HeistSettings.TOTAL_THIEVES];
 
 	//========================================================================================================================//
 	// General Repository Contructor
@@ -215,8 +223,10 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 * @throws java.rmi.RemoteException
 	 */
 	@Override
-	public synchronized final void logFinish_ConcentrationSiteUpdate() throws RemoteException {
-		this.master_thief_state = State_MasterThief.PRESENTING_THE_REPORT;
+	public synchronized final void logFinish_ConcentrationSiteUpdate(int clock) throws RemoteException {
+		clock++;
+		clocks[0].updateTime(clock);
+		master_thief_state = State_MasterThief.PRESENTING_THE_REPORT;
 		for (int index = 0; index < HeistSettings.TEAM_SIZE; index++) {
 			thieves_states[index] = State_Thief.HEAR_REPORT;
 		}
@@ -277,48 +287,63 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	/**
 	 * Log line containing full updated thief info.
 	 *
+	 * @param clock caller thief clock
 	 * @param thief_id thief identification
 	 * @param assault_party_id thief assault party id
 	 * @param agility thief agility
 	 * @param stolen_canvas updated current number of canvas in hold
 	 * @param state updated thief state
+	 * @return updated clock
 	 * @throws java.rmi.RemoteException
 	 */
 	@Override
-	public synchronized final void logLine_ThiefUpdateFull(int thief_id, int assault_party_id, int agility, int stolen_canvas, State_Thief state) throws RemoteException {
+	public synchronized final int logLine_ThiefUpdateFull(int clock, int thief_id, int assault_party_id, int agility, int stolen_canvas, State_Thief state) throws RemoteException {
+		clock++;
 		this.thieves_states[thief_id] = state;
 		this.thieves_canvas[thief_id] = stolen_canvas;
 		this.thieves_agility[thief_id] = agility;
 		this.thieves_assault_party_id[thief_id] = assault_party_id;
+		clocks[1 + thief_id].updateTime(clock);
 		logLine();
+		return clock;
 	}
 
 	/**
 	 * Log line containing updated thief info over stolen canvas and state.
 	 *
+	 * @param clock caller thief clock
 	 * @param thief_id thief identification
 	 * @param stolen_canvas updated current number of canvas in hold
 	 * @param state updated thief state
+	 * @return updated clock
 	 * @throws java.rmi.RemoteException
 	 */
 	@Override
-	public synchronized final void logLine_ThiefUpdateStateCanvas(int thief_id, int stolen_canvas, State_Thief state) throws RemoteException {
+	public synchronized final int logLine_ThiefUpdateStateCanvas(int clock, int thief_id, int stolen_canvas, State_Thief state) throws RemoteException {
+		clock++;
 		this.thieves_states[thief_id] = state;
 		this.thieves_canvas[thief_id] = stolen_canvas;
+		clocks[1 + thief_id].updateTime(clock);
 		logLine();
+		return clock;
 	}
 
 	/**
 	 * Log line containing updated thief info over its state.
 	 *
+	 * @param clock caller thief clock
 	 * @param thief_id thief identification
 	 * @param state updated thief state
+	 * @return updated clock
 	 * @throws java.rmi.RemoteException
 	 */
 	@Override
-	public synchronized final void logLine_ThiefUpdateState(int thief_id, State_Thief state) throws RemoteException {
+	public synchronized final int logLine_ThiefUpdateState(int clock, int thief_id, State_Thief state) throws RemoteException {
+		clock++;
 		this.thieves_states[thief_id] = state;
+		clocks[1 + thief_id].updateTime(clock);
 		logLine();
+		return clock;
 	}
 
 	//========================================================================================================================//
@@ -327,13 +352,19 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	/**
 	 * Log line containing updated master thief info over its state.
 	 *
+	 *
+	 * @param clock caller thief clock
 	 * @param state updated thief state
+	 * @return updated clock
 	 * @throws java.rmi.RemoteException
 	 */
 	@Override
-	public synchronized final void logLine_MasterThiefUpdateState(State_MasterThief state) throws RemoteException {
+	public synchronized final int logLine_MasterThiefUpdateState(int clock, State_MasterThief state) throws RemoteException {
+		clock++;
 		this.master_thief_state = state;
+		clocks[0].updateTime(clock);
 		logLine();
+		return clock;
 	}
 
 	//========================================================================================================================//
@@ -408,7 +439,11 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 				}
 			}
 		}
-
+		line_1 += "Vector Clocks";
+		line_2 += String.format("%1$4d", 1);
+		for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++){
+			line_2 += String.format(" %1$4d", index + 1);
+		}
 		line_3 += "Museum  ";
 		for (int room_index = 0; room_index < HeistSettings.TOTAL_ROOMS; room_index++) {
 			line_4 += String.format("Room %1$02d ", room_index + 1);
@@ -465,6 +500,11 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 				line_2 += String.format("  %1$2d %2$3s %3$2d  ",
 						thief_index, team_positions[team_index][thief_index % HeistSettings.TEAM_SIZE], thieves_canvas[thief_index]);
 			}
+		}
+		
+		line_1 += String.format("%1$4d", clocks[0].getTime());
+		for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++){
+			line_1 += String.format(" %1$4d", clocks[index + 1].getTime());
 		}
 
 		for (int room_index = 0; room_index < HeistSettings.TOTAL_ROOMS; room_index++) {

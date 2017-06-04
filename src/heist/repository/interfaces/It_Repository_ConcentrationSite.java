@@ -17,8 +17,9 @@ public interface It_Repository_ConcentrationSite extends Remote {
 	/**
 	 * Finalises log, updates all states from master thief and thieves to its final states, log a line with updated info and the final messages.
 	 *
+	 * @param clock master thief updated clock
 	 * @throws java.rmi.RemoteException
 	 */
-	public void logFinish_ConcentrationSiteUpdate() throws RemoteException;
+	public void logFinish_ConcentrationSiteUpdate(int clock) throws RemoteException;
 
 }

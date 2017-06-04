@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Clock Vector
  */
 package clock_vector;
 
@@ -29,6 +27,15 @@ public class ClockVector implements Serializable {
 		this.time = 0;
 	}
 
+	/**
+	 * Updates current time.
+	 *
+	 * @param time new updated time
+	 */
+	public void updateTime(int time) {
+		this.time = time;
+	}
+	
 	/**
 	 * Get current time.
 	 *

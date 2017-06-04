@@ -3,6 +3,7 @@
  */
 package heist.thieves;
 
+import clock_vector.ClockVector;
 import genclass.GenericIO;
 import heist.assault_party.interfaces.It_Thief_AssaultParty;
 import heist.concentration_site.interfaces.It_Thief_ConcentrationSite;
@@ -27,6 +28,10 @@ public class Thief extends Thread {
 	//========================================================================================================================//
 	// Thief data
 	//========================================================================================================================//
+	/**
+	 * Thief clock
+	 */
+	private final ClockVector clock = new ClockVector();
 	/**
 	 * Thief id
 	 */
@@ -121,8 +126,9 @@ public class Thief extends Thread {
 			self = new Thief[HeistSettings.TOTAL_THIEVES];
 			for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++) {
 				self[index] = new Thief(index, index % HeistSettings.TEAM_SIZE);
-				((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-						.logLine_ThiefUpdateFull(self[index].id, self[index].assault_party_id, self[index].agility, self[index].stolen_canvas, self[index].state);
+				self[index].clock.increment();
+				self[index].clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+						.logLine_ThiefUpdateFull(self[index].clock.getTime(), self[index].id, self[index].assault_party_id, self[index].agility, self[index].stolen_canvas, self[index].state));
 			}
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
@@ -156,28 +162,34 @@ public class Thief extends Thread {
 						if (hasRolledACanvas) {
 							// if the thief made a excursion, he hands the results of it to the master thief otherwise awaits for the next order from the master thief
 							method_name = "OUTSIDE [has rolled a canvas] - hand a canvas";
+							clock.increment();
+							clock.increment();
 							((It_Thief_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
 									.handACanvas(id, assault_party_id, target_room, stolen_canvas);
 							hasRolledACanvas = false;
 							stolen_canvas = 0;
 							method_name = "OUTSIDE [has rolled a canvas] - state and canvas update";
-							((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-									.logLine_ThiefUpdateStateCanvas(id, stolen_canvas, state);
+							clock.increment();
+							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+									.logLine_ThiefUpdateStateCanvas(clock.getTime(), id, stolen_canvas, state));
 							break;
 						} else {
 							// depending on the order he either chooses to prepare for an excursion or goes to listen to the report
 							method_name = "OUTSIDE [wake type] - am i needed";
+							clock.increment();
 							wake_type = ((It_Thief_ConcentrationSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Conentration_Site"))
 									.amINeeded(assault_party_id);
 							switch (wake_type) {
 								case 1:
 									method_name = "OUTSIDE [case 1] - prepare excursion";
+									clock.increment();
 									this.target_room = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
 											.prepareExcursion(id);
 									this.state = State_Thief.CRAWLING_INWARDS;
 									method_name = "OUTSIDE [case 1] - state update";
-									((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-											.logLine_ThiefUpdateState(id, state);
+									clock.increment();
+									clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+											.logLine_ThiefUpdateState(clock.getTime(), id, state));
 									break;
 								case -1:
 									// no need to update state as it is updated before closing the file
@@ -192,47 +204,58 @@ public class Thief extends Thread {
 					case CRAWLING_INWARDS:
 						// initial part of the excursion, the thief crawls inwards toward the museum room
 						method_name = "CRAWLING_INWARDS - crawl in";
+						clock.increment();
+						clock.increment();
 						state = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
 								.crawlIn(id, agility);
 						if (state == State_Thief.AT_A_ROOM) {
 							method_name = "CRAWLING_INWARDS [next state is at a room] - state update";
-							((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-									.logLine_ThiefUpdateState(id, state);
+							clock.increment();
+							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+									.logLine_ThiefUpdateState(clock.getTime(), id, state));
 						}
 						break;
 					case AT_A_ROOM:
 						if (!hasRolledACanvas) {
 							// if thief just arrived to the room and hasn't rolled a canvas, rolls one
 							method_name = "AT_A_ROOM - roll a canvas";
+							clock.increment();
+							clock.increment();
 							stolen_canvas = ((It_Thief_Museum) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Museum"))
 									.rollACanvas(id, target_room);
 							method_name = "AT_A_ROOM - state and canvas update";
-							((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-									.logLine_ThiefUpdateStateCanvas(id, stolen_canvas, state);
+							clock.increment();
+							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+									.logLine_ThiefUpdateStateCanvas(clock.getTime(), id, stolen_canvas, state));
 							hasRolledACanvas = true;
 							break;
 						} else {
 							// awaits for entire team arrival to the room before start returning to camp
 							method_name = "AT_A_ROOM - reverse direction";
+							clock.increment();
 							boolean reverse = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
 									.reverseDirection();
 							if (reverse) {
 								state = State_Thief.CRAWLING_OUTWARDS;
 								method_name = "AT_A_ROOM - state update";
-								((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-										.logLine_ThiefUpdateState(id, state);
+								clock.increment();
+								clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+										.logLine_ThiefUpdateState(clock.getTime(), id, state));
 							}
 							break;
 						}
 					case CRAWLING_OUTWARDS:
-						// final part of the excursion, the thief crawls outwards toward the concentration site
+						// final part of the excursion, the thief crawls outwards toward the concFFentration site
 						method_name = "CRAWLING_OUTWARDS - crawl out";
+						clock.increment();
+						clock.increment();
 						this.state = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
 								.crawlOut(id, agility);
 						if (this.state == State_Thief.OUTSIDE) {
 							method_name = "CRAWLING_OUTWARDS [next state is outside] - state update";
-							((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-									.logLine_ThiefUpdateState(id, state);
+							clock.increment();
+							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+									.logLine_ThiefUpdateState(clock.getTime(), id, state));
 						}
 						break;
 					case HEAR_REPORT:

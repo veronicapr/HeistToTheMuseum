@@ -132,7 +132,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	 * lines.
 	 */
 	@Override
-	public synchronized void sumUpResults() {
+	public synchronized void sumUpResults(int clock) {
 		// sets completion flag as true
 		this.heist_complete = true;
 		// notifies all thieves
@@ -140,7 +140,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 		// finishes log
 		try {
 			((It_Repository_ConcentrationSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
-					.logFinish_ConcentrationSiteUpdate();
+					.logFinish_ConcentrationSiteUpdate(clock);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (sum up results): " + ex.getMessage());
 			System.exit(1);

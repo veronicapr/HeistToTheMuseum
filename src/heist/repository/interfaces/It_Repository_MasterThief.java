@@ -13,13 +13,15 @@ import java.rmi.RemoteException;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public interface It_Repository_MasterThief extends Remote{
+public interface It_Repository_MasterThief extends Remote {
 
 	/**
 	 * Log line containing updated master thief info over its state.
 	 *
+	 * @param clock caller thief clock
 	 * @param state updated thief state
+	 * @return updated clock
 	 * @throws java.rmi.RemoteException
 	 */
-	public void logLine_MasterThiefUpdateState(State_MasterThief state) throws RemoteException;
+	public int logLine_MasterThiefUpdateState(int clock, State_MasterThief state) throws RemoteException;
 }

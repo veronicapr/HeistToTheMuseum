@@ -26,7 +26,8 @@ public interface It_MasterThief_ConcentrationSite extends Remote {
 	 * Sets heist_complete flag as true and notifies all thieves of this alteration setting them for termination. Finalises the log file by adding its finishing
 	 * lines.
 	 *
+	 * @param clock master thief clock
 	 * @throws java.rmi.RemoteException
 	 */
-	void sumUpResults() throws RemoteException;
+	void sumUpResults(int clock) throws RemoteException;
 }

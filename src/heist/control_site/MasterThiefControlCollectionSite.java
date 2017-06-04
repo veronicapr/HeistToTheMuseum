@@ -111,7 +111,7 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	/**
 	 * Registry host name
 	 */
-	private static String registry_host_name;
+	private static String repository_host_name;
 	/**
 	 * Registry port number
 	 */
@@ -133,7 +133,7 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 			return;
 		} else {
 			try {
-				registry_host_name = args[0];
+				repository_host_name = args[0];
 				registry_port_number = Integer.parseInt(args[1]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
@@ -148,7 +148,7 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 		// Regist Master Thieves Concentration Site
 		try {
 			self = new MasterThiefControlCollectionSite();
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Control_Site", self);
+			LocateRegistry.createRegistry(registry_port_number).rebind("Control_Site", self);
 			GenericIO.writelnString("Control Site bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Regist exception: " + ex.getMessage());
@@ -156,7 +156,7 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 		}
 		// log line
 		try {
-			((It_Repository_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+			((It_Repository_ControlSite) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 					.logLine_ControlSiteUpdate(self.stolen_canvas);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
@@ -312,7 +312,7 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 		this.returned_members_size++;
 		// logs line
 		try {
-			((It_Repository_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+			((It_Repository_ControlSite) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 					.logLine_ControlSiteUpdate(this.stolen_canvas);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (hand a canvas): " + ex.getMessage());

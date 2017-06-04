@@ -65,7 +65,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	/**
 	 * Registry host name
 	 */
-	private static String registry_host_name;
+	private static String repository_host_name;
 	/**
 	 * Registry port number
 	 */
@@ -86,7 +86,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 			return;
 		} else {
 			try {
-				registry_host_name = args[0];
+				repository_host_name = args[0];
 				registry_port_number = Integer.parseInt(args[1]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
@@ -101,7 +101,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 		// regist concentration site
 		try {
 			self = new OrdinaryThievesConcentrationSite();
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Concentration_Site", self);
+			LocateRegistry.createRegistry(registry_port_number).rebind("Concentration_Site", self);
 			GenericIO.writelnString("Concentration Site bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Regist exception: " + ex.getMessage());
@@ -139,7 +139,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 		notifyAll();
 		// finishes log
 		try {
-			((It_Repository_ConcentrationSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+			((It_Repository_ConcentrationSite) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 					.logFinish_ConcentrationSiteUpdate(clock);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (sum up results): " + ex.getMessage());

@@ -63,7 +63,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	/**
 	 * Registry host name
 	 */
-	private static String registry_host_name;
+	private static String repository_host_name;
 	/**
 	 * Registry port number
 	 */
@@ -84,7 +84,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 			return;
 		} else {
 			try {
-				registry_host_name = args[0];
+				repository_host_name = args[0];
 				registry_port_number = Integer.parseInt(args[1]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
@@ -98,7 +98,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 		// regist museum
 		try {
 			self = new Museum();
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Museum", self);
+			LocateRegistry.createRegistry(registry_port_number).rebind("Museum", self);
 			GenericIO.writelnString("Museum bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Regist exception: " + ex.getMessage());
@@ -106,7 +106,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 		}
 		// log full update
 		try {
-			((It_Repository_Museum) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+			((It_Repository_Museum) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 					.logLine_MuseumUpdateFull(self.rooms_paintings, self.rooms_distance);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
@@ -161,7 +161,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 		}
 		// logs line
 		try {
-			((It_Repository_Museum) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+			((It_Repository_Museum) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 					.logLine_MuseumUpdateSingle(target_room, self.rooms_paintings[target_room]);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (roll_a_canvas): " + ex.getMessage());

@@ -72,31 +72,59 @@ public class MasterThief extends Thread {
 	 */
 	private static MasterThief self;
 	/**
-	 * Registry host name
+	 * Repository host name
 	 */
-	private static String registry_host_name;
+	private static String repository_host_name;
+
+	/**
+	 * Museum host name
+	 */
+	private static String museum_host_name;
+
+	/**
+	 * Assault party host name
+	 */
+	private static String assault_party_host_name;
+
+	/**
+	 * Control site host name
+	 */
+	private static String control_site_host_name;
+
+	/**
+	 * Concentration site host name
+	 */
+	private static String concentration_site_host_name;
 	/**
 	 * Registry port number
 	 */
 	private static int registry_port_number;
 
 	/**
-	 * General repository server start, requires 2 argument.
+	 * General repository server start, requires 6 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
-	 * <li>registry host name</li>
+	 * <li>repository host name</li>
+	 * <li>museum host name</li>
+	 * <li>assault party host name</li>
+	 * <li>control site host name</li>
+	 * <li>concentration site host name</li>
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 2) {
+		if (args.length != 6) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			System.exit(1);
 		} else {
 			try {
-				registry_host_name = args[0];
-				registry_port_number = Integer.parseInt(args[1]);
+				repository_host_name = args[0];
+				museum_host_name = args[1];
+				assault_party_host_name = args[2];
+				control_site_host_name = args[3];
+				concentration_site_host_name = args[4];
+				registry_port_number = Integer.parseInt(args[5]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 				System.exit(1);
@@ -110,7 +138,7 @@ public class MasterThief extends Thread {
 		// regist repository
 		try {
 			self = new MasterThief();
-			self.clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+			self.clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 					.logLine_MasterThiefUpdateState(self.clock.getTime(), self.state));
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
@@ -141,28 +169,28 @@ public class MasterThief extends Thread {
 				switch (state) {
 					case PLANNING_THE_HEIST:
 						method_name = "PLANNING_THE_HEIST - start operations";
-						room_distances = ((It_MasterThief_Museum) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Museum"))
+						room_distances = ((It_MasterThief_Museum) LocateRegistry.getRegistry(museum_host_name, registry_port_number).lookup("Museum"))
 								.startOperations();
 						clock.increment();
 						state = State_MasterThief.DECIDING_WHAT_TO_DO;
 						method_name = "PLANNING_THE_HEIST - state update";
-						clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+						clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 								.logLine_MasterThiefUpdateState(clock.getTime(), state));
 						break;
 					case DECIDING_WHAT_TO_DO:
 						clock.increment();
-						target_room = ((It_MasterThief_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+						target_room = ((It_MasterThief_ControlSite) LocateRegistry.getRegistry(control_site_host_name, registry_port_number).lookup("Control_Site"))
 								.appraiseSit();
 						switch (target_room) {
 							case -1:
 								state = State_MasterThief.WAITING_FOR_GROUP_ARRIVAL;
 								method_name = "DECIDING_WHAT_TO_DO [case 1] - state update";
 								clock.increment();
-								clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+								clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 										.logLine_MasterThiefUpdateState(clock.getTime(), state));
 								method_name = "DECIDING_WHAT_TO_DO [case 1] - take a rest";
 								clock.increment();
-								returned_team = ((It_MasterThief_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+								returned_team = ((It_MasterThief_ControlSite) LocateRegistry.getRegistry(control_site_host_name, registry_port_number).lookup("Control_Site"))
 										.takeARest();
 								break;
 							case -2:
@@ -175,7 +203,7 @@ public class MasterThief extends Thread {
 								}
 								if (no_assigned_teams) {
 									clock.increment();
-									((It_MasterThief_ConcentrationSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Concentration_Site"))
+									((It_MasterThief_ConcentrationSite) LocateRegistry.getRegistry(concentration_site_host_name, registry_port_number).lookup("Concentration_Site"))
 											.sumUpResults(clock.getTime());
 									// no need to update state as it is updated before closing the file
 									state = State_MasterThief.PRESENTING_THE_REPORT;
@@ -191,12 +219,12 @@ public class MasterThief extends Thread {
 								state = State_MasterThief.ASSEMBLING_A_GROUP;
 								method_name = "DECIDING_WHAT_TO_DO [case default] - state update";
 								clock.increment();
-								clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+								clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 										.logLine_MasterThiefUpdateState(clock.getTime(), state));
 								method_name = "DECIDING_WHAT_TO_DO [case default] - prepare assault party";
 								clock.increment();
 								clock.increment();
-								((It_MasterThief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + team_index))
+								((It_MasterThief_AssaultParty) LocateRegistry.getRegistry(assault_party_host_name, registry_port_number).lookup("Assault_Party_" + team_index))
 										.prepareAssaultParty(target_room, room_distances[target_room]);
 								break;
 						}
@@ -210,18 +238,18 @@ public class MasterThief extends Thread {
 						}
 						method_name = "ASSEMBLING_A_GROUP - send assault party";
 						clock.increment();
-						((It_MasterThief_ConcentrationSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Concentration_Site"))
+						((It_MasterThief_ConcentrationSite) LocateRegistry.getRegistry(concentration_site_host_name, registry_port_number).lookup("Concentration_Site"))
 								.sendAssaultParty(team_index);
 						state = State_MasterThief.DECIDING_WHAT_TO_DO;
 						method_name = "ASSEMBLING_A_GROUP - state update";
 						clock.increment();
-						clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+						clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 								.logLine_MasterThiefUpdateState(clock.getTime(), state));
 						break;
 					case WAITING_FOR_GROUP_ARRIVAL:
 						method_name = "WAITING_FOR_GROUP_ARRIVAL - collect canvas";
 						clock.increment();
-						((It_MasterThief_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+						((It_MasterThief_ControlSite) LocateRegistry.getRegistry(control_site_host_name, registry_port_number).lookup("Control_Site"))
 								.collectCanvas(returned_team);
 						if (returned_team > -1) {
 							this.assigned_teams[returned_team] = false;
@@ -230,7 +258,7 @@ public class MasterThief extends Thread {
 						this.state = State_MasterThief.DECIDING_WHAT_TO_DO;
 						method_name = "WAITING_FOR_GROUP_ARRIVAL - state update";
 						clock.increment();
-						clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+						clock.updateTime(((It_Repository_MasterThief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 								.logLine_MasterThiefUpdateState(clock.getTime(), state));
 						break;
 					case PRESENTING_THE_REPORT:

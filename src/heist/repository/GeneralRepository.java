@@ -141,24 +141,22 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	private final TextFile log = new TextFile();
 
 	/**
-	 * General repository server start, requires 4 argument.
+	 * General repository server start, requires 2 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
-	 * <li>registry host name</li>
 	 * <li>registry port number</li>
 	 * <li>general repository log name</li>
 	 * </ul>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 3) {
+		if (args.length != 2) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			System.exit(1);
 		} else {
 			try {
-				registry_host_name = args[0];
-				registry_port_number = Integer.parseInt(args[1]);
-				log_name = args[2];
+				registry_port_number = Integer.parseInt(args[0]);
+				log_name = args[1];
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 				System.exit(1);
@@ -172,7 +170,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 		// regist repository
 		try {
 			self = new GeneralRepository();
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("General_Repository", self);
+			LocateRegistry.createRegistry(registry_port_number).rebind("General_Repository", self);
 			GenericIO.writelnString("General repository bound!");
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Regist remote exception: " + ex.getMessage());

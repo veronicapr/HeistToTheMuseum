@@ -89,7 +89,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	/**
 	 * Registry host name
 	 */
-	private static String registry_host_name;
+	private static String repository_host_name;
 	/**
 	 * Registry port number
 	 */
@@ -110,7 +110,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 			return;
 		} else {
 			try {
-				registry_host_name = args[0];
+				repository_host_name = args[0];
 				registry_port_number = Integer.parseInt(args[1]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
@@ -127,7 +127,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 			self = new AssaultParty[HeistSettings.TOTAL_TEAMS];
 			for (int index = 0; index < HeistSettings.TOTAL_TEAMS; index++) {
 				self[index] = new AssaultParty(index);
-				LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Assault_Party_" + index, self[index]);
+				LocateRegistry.createRegistry(registry_port_number).rebind("Assault_Party_" + index, self[index]);
 				GenericIO.writelnString("Assault Party " + index + " bound!");
 			}
 		} catch (RemoteException ex) {
@@ -158,7 +158,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 		this.start_signal = false;
 		this.return_signal = false;
 		try {
-			((It_Repository_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+			((It_Repository_AssaultParty) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 					.logLine_AssaultPartyUpdateRoom(this.id, target_room);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (prepare assault party): " + ex.getMessage());
@@ -290,7 +290,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 				break;
 			}
 			try {
-				((It_Repository_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+				((It_Repository_AssaultParty) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 						.logLine_AssaultPartyUpdatePositions(thief_id, this.team_members, this.team_distances);
 			} catch (RemoteException ex) {
 				GenericIO.writelnString("Remote Exception (crawl in): " + ex.getMessage());
@@ -414,7 +414,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 				break;
 			}
 			try {
-				((It_Repository_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+				((It_Repository_AssaultParty) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 						.logLine_AssaultPartyUpdatePositions(thief_id, this.team_members, this.team_distances);
 			} catch (RemoteException ex) {
 				GenericIO.writelnString("Remote Exception (crawl out): " + ex.getMessage());

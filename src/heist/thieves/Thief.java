@@ -86,31 +86,59 @@ public class Thief extends Thread {
 	 */
 	private static Thief[] self;
 	/**
-	 * Registry host name
+	 * Repository host name
 	 */
-	private static String registry_host_name;
+	private static String repository_host_name;
+
+	/**
+	 * Museum host name
+	 */
+	private static String museum_host_name;
+
+	/**
+	 * Assault party host name
+	 */
+	private static String assault_party_host_name;
+
+	/**
+	 * Control site host name
+	 */
+	private static String control_site_host_name;
+
+	/**
+	 * Concentration site host name
+	 */
+	private static String concentration_site_host_name;
 	/**
 	 * Registry port number
 	 */
 	private static int registry_port_number;
 
 	/**
-	 * General repository server start, requires 2 argument.
+	 * General repository server start, requires 6 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
-	 * <li>registry host name</li>
+	 * <li>repository host name</li>
+	 * <li>museum host name</li>
+	 * <li>assault party host name</li>
+	 * <li>control site host name</li>
+	 * <li>concentration site host name</li>
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 2) {
+		if (args.length != 6) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			System.exit(1);
 		} else {
 			try {
-				registry_host_name = args[0];
-				registry_port_number = Integer.parseInt(args[1]);
+				repository_host_name = args[0];
+				museum_host_name = args[1];
+				assault_party_host_name = args[2];
+				control_site_host_name = args[3];
+				concentration_site_host_name = args[4];
+				registry_port_number = Integer.parseInt(args[5]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 				System.exit(1);
@@ -127,7 +155,7 @@ public class Thief extends Thread {
 			for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++) {
 				self[index] = new Thief(index, index % HeistSettings.TEAM_SIZE);
 				self[index].clock.increment();
-				self[index].clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+				self[index].clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 						.logLine_ThiefUpdateFull(self[index].clock.getTime(), self[index].id, self[index].assault_party_id, self[index].agility, self[index].stolen_canvas, self[index].state));
 			}
 		} catch (RemoteException ex) {
@@ -164,31 +192,31 @@ public class Thief extends Thread {
 							method_name = "OUTSIDE [has rolled a canvas] - hand a canvas";
 							clock.increment();
 							clock.increment();
-							((It_Thief_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Control_Site"))
+							((It_Thief_ControlSite) LocateRegistry.getRegistry(control_site_host_name, registry_port_number).lookup("Control_Site"))
 									.handACanvas(id, assault_party_id, target_room, stolen_canvas);
 							hasRolledACanvas = false;
 							stolen_canvas = 0;
 							method_name = "OUTSIDE [has rolled a canvas] - state and canvas update";
 							clock.increment();
-							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 									.logLine_ThiefUpdateStateCanvas(clock.getTime(), id, stolen_canvas, state));
 							break;
 						} else {
 							// depending on the order he either chooses to prepare for an excursion or goes to listen to the report
 							method_name = "OUTSIDE [wake type] - am i needed";
 							clock.increment();
-							wake_type = ((It_Thief_ConcentrationSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Conentration_Site"))
+							wake_type = ((It_Thief_ConcentrationSite) LocateRegistry.getRegistry(concentration_site_host_name, registry_port_number).lookup("Conentration_Site"))
 									.amINeeded(assault_party_id);
 							switch (wake_type) {
 								case 1:
 									method_name = "OUTSIDE [case 1] - prepare excursion";
 									clock.increment();
-									this.target_room = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
+									this.target_room = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(assault_party_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
 											.prepareExcursion(id);
 									this.state = State_Thief.CRAWLING_INWARDS;
 									method_name = "OUTSIDE [case 1] - state update";
 									clock.increment();
-									clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+									clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 											.logLine_ThiefUpdateState(clock.getTime(), id, state));
 									break;
 								case -1:
@@ -206,12 +234,12 @@ public class Thief extends Thread {
 						method_name = "CRAWLING_INWARDS - crawl in";
 						clock.increment();
 						clock.increment();
-						state = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
+						state = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(assault_party_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
 								.crawlIn(id, agility);
 						if (state == State_Thief.AT_A_ROOM) {
 							method_name = "CRAWLING_INWARDS [next state is at a room] - state update";
 							clock.increment();
-							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 									.logLine_ThiefUpdateState(clock.getTime(), id, state));
 						}
 						break;
@@ -221,11 +249,11 @@ public class Thief extends Thread {
 							method_name = "AT_A_ROOM - roll a canvas";
 							clock.increment();
 							clock.increment();
-							stolen_canvas = ((It_Thief_Museum) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Museum"))
+							stolen_canvas = ((It_Thief_Museum) LocateRegistry.getRegistry(museum_host_name, registry_port_number).lookup("Museum"))
 									.rollACanvas(id, target_room);
 							method_name = "AT_A_ROOM - state and canvas update";
 							clock.increment();
-							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 									.logLine_ThiefUpdateStateCanvas(clock.getTime(), id, stolen_canvas, state));
 							hasRolledACanvas = true;
 							break;
@@ -233,13 +261,13 @@ public class Thief extends Thread {
 							// awaits for entire team arrival to the room before start returning to camp
 							method_name = "AT_A_ROOM - reverse direction";
 							clock.increment();
-							boolean reverse = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
+							boolean reverse = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(assault_party_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
 									.reverseDirection();
 							if (reverse) {
 								state = State_Thief.CRAWLING_OUTWARDS;
 								method_name = "AT_A_ROOM - state update";
 								clock.increment();
-								clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+								clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 										.logLine_ThiefUpdateState(clock.getTime(), id, state));
 							}
 							break;
@@ -249,12 +277,12 @@ public class Thief extends Thread {
 						method_name = "CRAWLING_OUTWARDS - crawl out";
 						clock.increment();
 						clock.increment();
-						this.state = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
+						this.state = ((It_Thief_AssaultParty) LocateRegistry.getRegistry(assault_party_host_name, registry_port_number).lookup("Assault_Party_" + assault_party_id))
 								.crawlOut(id, agility);
 						if (this.state == State_Thief.OUTSIDE) {
 							method_name = "CRAWLING_OUTWARDS [next state is outside] - state update";
 							clock.increment();
-							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+							clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 									.logLine_ThiefUpdateState(clock.getTime(), id, state));
 						}
 						break;

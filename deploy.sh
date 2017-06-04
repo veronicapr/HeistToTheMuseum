@@ -6,8 +6,9 @@ ControlSite="l040101-ws04.ua.pt";
 AssaultParty="l040101-ws05.ua.pt";
 Thief="l040101-ws06.ua.pt";
 MasterThief="l040101-ws07.ua.pt";
-#Port
-Port="22307";
+#Ports
+RegistPort="22000";
+ObjectPort="22307";
 #Other
 Path="~/Heist-RMI/";
 Options="-classpath $Path -Djava.rmi.server.codebase=file:$Path -Djava.security.policy=security.policy";
@@ -23,19 +24,19 @@ done
 
 #xterm -hold -e "echo 'RMI Registry'; sshpass -f password ssh sd0307@l040101-ws01.ua.pt 'rmiregistry -J-Djava.rmi.server.useCodebaseOnly=false 22307 &'" &
 #sleep 2;
-xterm -hold -e "echo 'General Repository'; sshpass -f password ssh sd0307@$Repository 'cd Heist-RMI/; java $Options heist/repository/GeneralRepository $Port $Log &'" &
+xterm -hold -e "echo 'General Repository'; sshpass -f password ssh sd0307@$Repository 'cd Heist-RMI/; java $Options heist/repository/GeneralRepository $ObjectPort $RegistPort $Log &'" &
 sleep 2;
-xterm -hold -e "echo 'Museum'; sshpass -f password ssh sd0307@$Museum 'cd Heist-RMI/; java $Options heist/museum/Museum $Repository $Port &'" &
+xterm -hold -e "echo 'Museum'; sshpass -f password ssh sd0307@$Museum 'cd Heist-RMI/; java $Options heist/museum/Museum $ObjectPort $Repository $RegistPort &'" &
 sleep 2;
-xterm -hold -e "echo 'Concentration Site'; sshpass -f password ssh sd0307@$ConcentrationSite 'cd Heist-RMI/; java $Options heist/concentration_site/OrdinaryThievesConcentrationSite $Repository $Port &'" &
+xterm -hold -e "echo 'Concentration Site'; sshpass -f password ssh sd0307@$ConcentrationSite 'cd Heist-RMI/; java $Options heist/concentration_site/OrdinaryThievesConcentrationSite $ObjectPort $Repository $RegistPort &'" &
 sleep 2;
-xterm -hold -e "echo 'Control Site'; sshpass -f password ssh sd0307@$ControlSite 'cd Heist-RMI/; java $Options heist/control_site/MasterThiefControlCollectionSite $Repository $Port &'" &
+xterm -hold -e "echo 'Control Site'; sshpass -f password ssh sd0307@$ControlSite 'cd Heist-RMI/; java $Options heist/control_site/MasterThiefControlCollectionSite $ObjectPort $Repository $RegistPort &'" &
 sleep 2;
-xterm -hold -e "echo 'Assault Party'; sshpass -f password ssh sd0307@$AssaultParty 'cd Heist-RMI/; java $Options heist/assault_party/AssaultParty $Repository $Port &'" &
+xterm -hold -e "echo 'Assault Party'; sshpass -f password ssh sd0307@$AssaultParty 'cd Heist-RMI/; java $Options heist/assault_party/AssaultParty $ObjectPort $Repository $RegistPort &'" &
 sleep 2;
-xterm -hold -e "echo 'Ordinary Thieves'; sshpass -f password ssh sd0307@$Thief 'cd Heist-RMI/; java $Options heist/thieves/Thief  $Museum $AssaultParty $ControlSite $ConcentrationSite $Port &'" &
+xterm -hold -e "echo 'Ordinary Thieves'; sshpass -f password ssh sd0307@$Thief 'cd Heist-RMI/; java $Options heist/thieves/Thief $Repository $Museum $AssaultParty $ControlSite $ConcentrationSite $RegistPort &'" &
 sleep 2;
-xterm -hold -e "echo 'Master Thief'; sshpass -f password ssh sd0307@$MasterThief 'cd Heist-RMI/; java $Options heist/thieves/MasterThief $Repository $Museum $AssaultParty $ControlSite $ConcentrationSite $Port &'" &
+xterm -hold -e "echo 'Master Thief'; sshpass -f password ssh sd0307@$MasterThief 'cd Heist-RMI/; java $Options heist/thieves/MasterThief $Repository $Museum $AssaultParty $ControlSite $ConcentrationSite $RegistPort &'" &
 sleep 30;
 
 echo "copying $Log file";

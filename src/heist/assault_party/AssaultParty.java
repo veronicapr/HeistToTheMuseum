@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Random;
 import settings.HeistSettings;
@@ -65,8 +66,8 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 * @param id assault party id
 	 * @throws java.rmi.RemoteException
 	 */
-	private AssaultParty(int id) throws RemoteException {
-		super();
+	private AssaultParty(int id, int port) throws RemoteException {
+		super(port);
 		this.id = id;
 		this.random = new Random();
 		for (int index = 0; index < HeistSettings.TEAM_SIZE; index++) {
@@ -87,6 +88,10 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 */
 	private static AssaultParty[] self;
 	/**
+	 * Object port number
+	 */
+	private static int port_number;
+	/**
 	 * Registry host name
 	 */
 	private static String repository_host_name;
@@ -96,22 +101,24 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	private static int registry_port_number;
 
 	/**
-	 * AssaultParty server start, requires 2 argument.
+	 * AssaultParty server start, requires 3 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
-	 * <li>registry host name</li>
+	 * <li>self port number</li>
+	 * <li>repository host name</li>
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 2) {
+		if (args.length != 3) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
 		} else {
 			try {
-				repository_host_name = args[0];
-				registry_port_number = Integer.parseInt(args[1]);
+				port_number = Integer.parseInt(args[0]);
+				repository_host_name = args[1];
+				registry_port_number = Integer.parseInt(args[2]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 				System.exit(1);
@@ -124,10 +131,11 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 		GenericIO.writelnString("Security manager was installed!");
 		// regist assault party 
 		try {
+			Registry registry = LocateRegistry.createRegistry(registry_port_number);
 			self = new AssaultParty[HeistSettings.TOTAL_TEAMS];
 			for (int index = 0; index < HeistSettings.TOTAL_TEAMS; index++) {
-				self[index] = new AssaultParty(index);
-				LocateRegistry.createRegistry(registry_port_number).rebind("Assault_Party_" + index, self[index]);
+				self[index] = new AssaultParty(index, port_number + index);
+				registry.rebind("Assault_Party_" + index, self[index]);
 				GenericIO.writelnString("Assault Party " + index + " bound!");
 			}
 		} catch (RemoteException ex) {

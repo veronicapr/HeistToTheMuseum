@@ -47,7 +47,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	 * @throws java.rmi.RemoteException
 	 */
 	private OrdinaryThievesConcentrationSite() throws RemoteException {
-		super();
+		super(port_number);
 		this.heist_complete = false;
 		for (int index = 0; index < HeistSettings.TOTAL_TEAMS; index++) {
 			this.prepared_teams[index] = false;
@@ -63,6 +63,10 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	 */
 	private static OrdinaryThievesConcentrationSite self;
 	/**
+	 * Object port number
+	 */
+	private static int port_number;
+	/**
 	 * Registry host name
 	 */
 	private static String repository_host_name;
@@ -72,22 +76,24 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	private static int registry_port_number;
 
 	/**
-	 * Ordinary Thieves Concentration Site server start, requires 2 argument.
+	 * Ordinary Thieves Concentration Site server start, requires 3 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
-	 * <li>registry host name</li>
+	 * <li>self port number</li>
+	 * <li>repository host name</li>
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 2) {
+		if (args.length != 3) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
 		} else {
 			try {
-				repository_host_name = args[0];
-				registry_port_number = Integer.parseInt(args[1]);
+				port_number = Integer.parseInt(args[0]);
+				repository_host_name = args[1];
+				registry_port_number = Integer.parseInt(args[2]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 				System.exit(1);

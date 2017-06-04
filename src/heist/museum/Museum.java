@@ -44,7 +44,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	 * equal to room index.
 	 */
 	private Museum() throws RemoteException {
-		super();
+		super(port_number);
 		// randomises room distances and sets a number of paintings equals to the room index
 		Random rand = new Random();
 		for (int i = 0; i < HeistSettings.TOTAL_ROOMS; i++) {
@@ -61,6 +61,10 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	 */
 	private static Museum self;
 	/**
+	 * Object port number
+	 */
+	private static int port_number;
+	/**
 	 * Registry host name
 	 */
 	private static String repository_host_name;
@@ -70,22 +74,24 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	private static int registry_port_number;
 
 	/**
-	 * Museum server start, requires 2 argument.
+	 * Museum server start, requires 3 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
-	 * <li>registry host name</li>
+	 * <li>self port number</li>
+	 * <li>repository host name</li>
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 2) {
+		if (args.length != 3) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
 		} else {
 			try {
-				repository_host_name = args[0];
-				registry_port_number = Integer.parseInt(args[1]);
+				port_number = Integer.parseInt(args[0]);
+				repository_host_name = args[1];
+				registry_port_number = Integer.parseInt(args[2]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 			}

@@ -81,7 +81,7 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	 * @throws java.rmi.RemoteException
 	 */
 	public MasterThiefControlCollectionSite() throws RemoteException {
-		super();
+		super(port_number);
 
 		this.stolen_canvas = 0;
 		this.first_non_empty_room = 0;
@@ -109,6 +109,10 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	 */
 	private static MasterThiefControlCollectionSite self;
 	/**
+	 * Object port number
+	 */
+	private static int port_number;
+	/**
 	 * Registry host name
 	 */
 	private static String repository_host_name;
@@ -118,23 +122,25 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	private static int registry_port_number;
 
 	/**
-	 * Master Thieves Control and Collection Site server start, requires 2 argument.
+	 * Master Thieves Control and Collection Site server start, requires 3 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
-	 * <li>registry host name</li>
+	 * <li>self port number</li>
+	 * <li>repository host name</li>
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
 	public static void main(String[] args) {
 
-		if (args.length != 2) {
+		if (args.length != 3) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
 		} else {
 			try {
-				repository_host_name = args[0];
-				registry_port_number = Integer.parseInt(args[1]);
+				port_number = Integer.parseInt(args[0]);
+				repository_host_name = args[1];
+				registry_port_number = Integer.parseInt(args[2]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
 				System.exit(1);

@@ -14,7 +14,7 @@ import java.rmi.RemoteException;
  * @author Miguel Ferreira nmec 72583
  */
 public interface It_Thief_AssaultParty extends Remote {
-	
+
 	/**
 	 * Thief prepares for excursion by setting its position to the initial position and verifies if everyone is ready, if so send start signal.
 	 *
@@ -37,13 +37,12 @@ public interface It_Thief_AssaultParty extends Remote {
 	 * <li>8th - decides whenever he reached the room or continues to crawl to it.</li>
 	 * </ul>
 	 *
-	 * @param state thief state
 	 * @param thief_id thief reference
 	 * @param thief_agility thief agility
 	 * @return ThiefState next state as State_Thief.AT_A_ROOM or State_Thief.CRAWLING_INWARDS
 	 * @throws java.rmi.RemoteException
 	 */
-	State_Thief crawlIn(State_Thief state, int thief_id, int thief_agility) throws RemoteException;
+	State_Thief crawlIn(int thief_id, int thief_agility) throws RemoteException;
 
 	/**
 	 * Verifies if everyone has already arrived at the room, if so signals everyone that the can start crawling back.
@@ -66,12 +65,11 @@ public interface It_Thief_AssaultParty extends Remote {
 	 * <li>8th - decides whenever he reached the concentration site or continues to crawl to it.</li>
 	 * </ul>
 	 *
-	 * @param state thief state
 	 * @param thief_id thief reference
 	 * @param thief_agility thief agility
 	 * @return next state as return State_Thief.OUTSIDE or State_Thief.CRAWLING_OUTWARDS
 	 * @throws java.rmi.RemoteException
 	 */
-	State_Thief crawlOut(State_Thief state, int thief_id, int thief_agility) throws RemoteException;
+	State_Thief crawlOut(int thief_id, int thief_agility) throws RemoteException;
 
 }

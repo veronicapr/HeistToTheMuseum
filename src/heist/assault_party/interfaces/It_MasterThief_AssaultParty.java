@@ -13,7 +13,7 @@ import java.rmi.RemoteException;
  * @author Miguel Ferreira nmec 72583
  */
 public interface It_MasterThief_AssaultParty extends Remote {
-	
+
 	/**
 	 * <p>
 	 * Prepares assault party by setting its target room and target distance.</p>

@@ -1,5 +1,5 @@
 /*
- * It Repository Museum
+ * It Repository AssaultParty
  */
 package heist.repository.interfaces;
 
@@ -7,7 +7,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Contains the log line methods called by Museum on the repository.
+ * Contains the log line methods called by Assault Party on the repository.
  *
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583

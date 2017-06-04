@@ -12,7 +12,7 @@ import java.rmi.RemoteException;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public interface It_MasterThief_ConcentrationSite extends Remote  {
+public interface It_MasterThief_ConcentrationSite extends Remote {
 
 	/**
 	 * Sets the assault party with given id as prepared and proceeds to notify all thieves of the occurrence.
@@ -25,6 +25,7 @@ public interface It_MasterThief_ConcentrationSite extends Remote  {
 	/**
 	 * Sets heist_complete flag as true and notifies all thieves of this alteration setting them for termination. Finalises the log file by adding its finishing
 	 * lines.
+	 *
 	 * @throws java.rmi.RemoteException
 	 */
 	void sumUpResults() throws RemoteException;

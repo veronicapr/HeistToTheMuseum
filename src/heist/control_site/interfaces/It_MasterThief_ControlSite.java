@@ -1,13 +1,10 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * It MasterThief ControlSite
  */
 package heist.control_site.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-
 
 /**
  * Contains the methods called by the master thief in Master Thief Control Collection Site.
@@ -15,7 +12,7 @@ import java.rmi.RemoteException;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public interface It_MasterThief_ControlCollectionSite extends Remote {
+public interface It_MasterThief_ControlSite extends Remote {
 
 	/**
 	 * <p>
@@ -47,7 +44,6 @@ public interface It_MasterThief_ControlCollectionSite extends Remote {
 	 */
 	int takeARest() throws RemoteException;
 
-	
 	/**
 	 * <p>
 	 * Retrieves and removes next assault party id form the queue and checks if corresponding member count is complete.</p>

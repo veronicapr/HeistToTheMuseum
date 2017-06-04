@@ -1,14 +1,10 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * It Thief ControlSite
  */
 package heist.control_site.interfaces;
 
-import heist.enums.State_Thief;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-
 
 /**
  * Contains the methods called by the thief in Master Thief Control Collection Site.
@@ -16,7 +12,7 @@ import java.rmi.RemoteException;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public interface It_Thief_ControlCollectionSite extends Remote {
+public interface It_Thief_ControlSite extends Remote {
 
 	/**
 	 * <p>
@@ -26,14 +22,12 @@ public interface It_Thief_ControlCollectionSite extends Remote {
 	 * <p>
 	 * Adds his assault party id to the returned members queue.</p>
 	 *
-	 * @param state thief state
 	 * @param thief_id thief id
 	 * @param assault_party_id thief assault party id
 	 * @param target_room thief target room
 	 * @param stolen_canvass
 	 * @throws java.rmi.RemoteException
 	 */
-	
-	void handACanvas(State_Thief state, int thief_id, int assault_party_id, int target_room, int stolen_canvass) throws RemoteException;
+	void handACanvas(int thief_id, int assault_party_id, int target_room, int stolen_canvass) throws RemoteException;
 
 }

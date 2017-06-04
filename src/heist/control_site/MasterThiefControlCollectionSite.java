@@ -1,20 +1,18 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Master Thief Control Collection Site
  */
 package heist.control_site;
 
 import genclass.GenericIO;
-import heist.control_site.interfaces.It_MasterThief_ControlCollectionSite;
-import heist.control_site.interfaces.It_Thief_ControlCollectionSite;
-import heist.enums.State_Thief;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import settings.HeistSettings;
-
+import heist.control_site.interfaces.It_MasterThief_ControlSite;
+import heist.control_site.interfaces.It_Thief_ControlSite;
+import heist.repository.interfaces.It_Repository_ControlSite;
+import java.rmi.NotBoundException;
 
 /**
  * <p>
@@ -27,34 +25,19 @@ import settings.HeistSettings;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public class MasterThiefControlCollectionSite extends UnicastRemoteObject implements It_MasterThief_ControlCollectionSite, It_Thief_ControlCollectionSite, Serializable  {
+public class MasterThiefControlCollectionSite extends UnicastRemoteObject implements It_MasterThief_ControlSite, It_Thief_ControlSite, Serializable {
 
 	//========================================================================================================================//
-	/**
-	 * Total number of thieves
-	 */
-	private final int total_thieves = HeistSettings.TOTAL_THIEVES;
-	/**
-	 * Total number of museum rooms
-	 */
-	private final int total_rooms = HeistSettings.TOTAL_ROOMS;
-	/**
-	 * Total number of assault parties
-	 */
-	private final int total_teams = HeistSettings.TOTAL_TEAMS;
-	/**
-	 * Number of elements in each assault party
-	 */
-	private final int team_size = HeistSettings.TEAM_SIZE;
+	// Control site data
 	//========================================================================================================================//
 	/**
 	 * Number of stolen canvas
 	 */
-	int stolen_canvas;
+	private int stolen_canvas;
 	/**
 	 * Flags for empty rooms
 	 */
-	private final boolean[] empty_rooms;
+	private final boolean[] empty_rooms = new boolean[HeistSettings.TOTAL_ROOMS];
 	/**
 	 * Empty room verification start
 	 */
@@ -62,20 +45,15 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	/**
 	 * Flags for assigned rooms
 	 */
-	private final boolean[] assigned_rooms;
+	private final boolean[] assigned_rooms = new boolean[HeistSettings.TOTAL_ROOMS];
 	/**
 	 * Number of assigned rooms
 	 */
 	private int total_assigned_rooms;
 	/**
-	 * Flags for non fully returned teams
-	 */
-	private final boolean[] returning_team;
-	/**
 	 * Returned team member count
 	 */
-	private final int[] member_count;
-	//========================================================================================================================//
+	private final int[] member_count = new int[HeistSettings.TOTAL_TEAMS];
 	/**
 	 * Returned members queue size
 	 */
@@ -91,45 +69,43 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	/**
 	 * Returned members queue
 	 */
-	private final int[] returned_members;
-	//========================================================================================================================//
+	private final int[] returned_members = new int[HeistSettings.TOTAL_THIEVES];
 
+	//========================================================================================================================//
+	// Control site constructor
+	//========================================================================================================================//
 	/**
-	 * Constructor to the Master Thief Control Collection Site, also initialises the the all flag arrays as false and all member_count at 0, as well as the stolen_canvas at 0.
+	 * Constructor to the Master Thief Control Collection Site, also initialises the the all flag arrays as false and all member_count at 0, as well as the
+	 * stolen_canvas at 0.
 	 *
 	 * @throws java.rmi.RemoteException
 	 */
-	public MasterThiefControlCollectionSite()  throws RemoteException {
+	public MasterThiefControlCollectionSite() throws RemoteException {
 		super();
 
 		this.stolen_canvas = 0;
 		this.first_non_empty_room = 0;
 		this.total_assigned_rooms = 0;
-		this.empty_rooms = new boolean[total_rooms];
-		this.assigned_rooms = new boolean[total_rooms];
-		for (int index = 0; index < total_rooms; index++) {
+		for (int index = 0; index < HeistSettings.TOTAL_ROOMS; index++) {
 			this.empty_rooms[index] = false;
 			this.assigned_rooms[index] = false;
 		}
-		this.returning_team = new boolean[total_teams];
-		this.member_count = new int[total_teams];
-		for (int index = 0; index < total_teams; index++) {
-			this.returning_team[index] = false;
+		for (int index = 0; index < HeistSettings.TOTAL_TEAMS; index++) {
 			this.member_count[index] = 0;
 		}
-
 		this.returned_members_size = 0;
 		this.returned_members_queue_start = 0;
 		this.returned_members_queue_end = 0;
-		this.returned_members = new int[total_thieves];
-		for (int index = 0; index < total_thieves; index++) {
+		for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++) {
 			this.returned_members[index] = 0;
 		}
 	}
 
-	
+	//========================================================================================================================//
+	// Control site server info and main
+	//========================================================================================================================//
 	/**
-	 * MasterThieves Control and Collection Site object reference [singleton]
+	 * Master Thieves Control and Collection Site object reference [singleton]
 	 */
 	private static MasterThiefControlCollectionSite self;
 	/**
@@ -140,8 +116,9 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	 * Registry port number
 	 */
 	private static int registry_port_number;
+
 	/**
-	 * Ordinary Thieves Concentration Site server start, requires 3 argument.
+	 * Master Thieves Control and Collection Site server start, requires 2 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
@@ -149,8 +126,8 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
-	public static void main(String[] args){
-		
+	public static void main(String[] args) {
+
 		if (args.length != 2) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
@@ -160,6 +137,7 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 				registry_port_number = Integer.parseInt(args[1]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
+				System.exit(1);
 			}
 		}
 		// security manager
@@ -167,20 +145,30 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 			System.setSecurityManager(new SecurityManager());
 		}
 		GenericIO.writelnString("Security manager was installed!");
-		
 		// Regist Master Thieves Concentration Site
 		try {
 			self = new MasterThiefControlCollectionSite();
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Master Thief Control and Collection Site", self);
-			GenericIO.writelnString("Master Thief Control and Collection Site bound!");
+			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Control_Site", self);
+			GenericIO.writelnString("Control Site bound!");
 		} catch (RemoteException ex) {
-			GenericIO.writelnString("Master Thief Control and Collection Site exception: " + ex.getMessage());
+			GenericIO.writelnString("Regist exception: " + ex.getMessage());
+			System.exit(1);
 		}
-		// log full update
-		
+		// log line
+		try {
+			((It_Repository_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+					.logLine_ControlSiteUpdate(self.stolen_canvas);
+		} catch (RemoteException ex) {
+			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
+			System.exit(1);
+		} catch (NotBoundException ex) {
+			GenericIO.writelnString("Not Bound Exception (main log line):  " + ex.getMessage());
+			System.exit(1);
+		}
 		// ready message
-		GenericIO.writelnString("Master Thief Control and Collection Site server ready!");
+		GenericIO.writelnString("Control Site server ready!");
 	}
+
 	//========================================================================================================================//
 	// Master thief methods
 	//========================================================================================================================//
@@ -205,11 +193,11 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 		boolean all_rooms_empty = true;
 		boolean no_returning_teams = (this.total_assigned_rooms == 0);
 		// if someone is waiting to deliver a canvas of if no more teams can be assigned, retreives the canvas or awaits for arrivals
-		if ((this.returned_members_size != 0) || (this.total_assigned_rooms == this.total_teams)) {
+		if ((this.returned_members_size != 0) || (this.total_assigned_rooms == HeistSettings.TOTAL_TEAMS)) {
 			return -1;
 		}
 		// cycles trough the rooms
-		for (int room_index = this.first_non_empty_room; room_index < this.total_rooms; room_index++) {
+		for (int room_index = this.first_non_empty_room; room_index < HeistSettings.TOTAL_ROOMS; room_index++) {
 			// if room is empty and all previous rooms are in the same situation, next cycle begins from here, and continues
 			if (all_rooms_empty && this.empty_rooms[room_index]) {
 				this.first_non_empty_room = room_index + 1;
@@ -255,9 +243,8 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 		}
 		// retrieves and removes queue first assault party id
 		int team_id = this.returned_members[this.returned_members_queue_start];
-		this.returned_members_queue_start = (this.returned_members_queue_start + 1) % this.total_thieves;
+		this.returned_members_queue_start = (this.returned_members_queue_start + 1) % HeistSettings.TOTAL_THIEVES;
 		this.returned_members_size--;
-
 		return team_id;
 	}
 
@@ -279,9 +266,8 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	@Override
 	public synchronized int collectCanvas(int team_id) {
 		// checks if all assault party members associated with retrieved id have returned, if so returns team id and checks returning as false and member count as 0
-		if (this.member_count[team_id] == this.team_size) {
+		if (this.member_count[team_id] == HeistSettings.TEAM_SIZE) {
 			this.member_count[team_id] = 0;
-			this.returning_team[team_id] = false;
 			this.total_assigned_rooms--;
 			// returns team id
 			return team_id;
@@ -302,14 +288,13 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 	 * <p>
 	 * Adds his assault party id to the returned members queue.</p>
 	 *
-	 * @param state thief state
 	 * @param thief_id thief id
 	 * @param assault_party_id thief assault party id
 	 * @param target_room thief target room
 	 * @param stolen_canvas thief stolen canvas
 	 */
 	@Override
-	public synchronized void handACanvas(State_Thief state, int thief_id, int assault_party_id, int target_room, int stolen_canvas) {
+	public synchronized void handACanvas(int thief_id, int assault_party_id, int target_room, int stolen_canvas) {
 		// hands a canvas
 		this.stolen_canvas += stolen_canvas;
 		// if empty handed, sets room as empty
@@ -317,17 +302,25 @@ public class MasterThiefControlCollectionSite extends UnicastRemoteObject implem
 			this.empty_rooms[target_room] = true;
 		}
 		// sets team as returning and adds to member count, if all members arrived sets target room as unassigned
-		this.returning_team[assault_party_id] = true;
 		this.member_count[assault_party_id]++;
-		if (this.member_count[assault_party_id] == this.team_size) {
+		if (this.member_count[assault_party_id] == HeistSettings.TEAM_SIZE) {
 			this.assigned_rooms[target_room] = false;
 		}
 		// adds his assault party id to the returned members queue
 		this.returned_members[this.returned_members_queue_end] = assault_party_id;
-		this.returned_members_queue_end = (this.returned_members_queue_end + 1) % this.total_thieves;
+		this.returned_members_queue_end = (this.returned_members_queue_end + 1) % HeistSettings.TOTAL_THIEVES;
 		this.returned_members_size++;
 		// logs line
-		//repository.logLine(stolen_canvas, state, thief_id);
+		try {
+			((It_Repository_ControlSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+					.logLine_ControlSiteUpdate(this.stolen_canvas);
+		} catch (RemoteException ex) {
+			GenericIO.writelnString("Remote Exception (hand a canvas): " + ex.getMessage());
+			System.exit(1);
+		} catch (NotBoundException ex) {
+			GenericIO.writelnString("Not Bound Exception (hand a canvas):  " + ex.getMessage());
+			System.exit(1);
+		}
 		// notifies master thief
 		notifyAll();
 	}

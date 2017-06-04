@@ -5,7 +5,7 @@ package heist.enums;
 
 /**
  * Master thief state types, represents the current job of the master thief.
- * 
+ *
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */

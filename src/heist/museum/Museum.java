@@ -25,7 +25,7 @@ import java.rmi.server.UnicastRemoteObject;
 public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum, It_Thief_Museum, Serializable {
 
 	//========================================================================================================================//
-	// Museum Data
+	// Museum data
 	//========================================================================================================================//
 	/**
 	 * Array containing the number of paintings in each room
@@ -37,7 +37,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	private final int[] rooms_distance = new int[HeistSettings.TOTAL_ROOMS];
 
 	//========================================================================================================================//
-	// Museum instance
+	// Museum contructor
 	//========================================================================================================================//
 	/**
 	 * Generates the Museum by randomising a value of distance for each museum room between given minimum and maximum distance and giving a number of paintings
@@ -70,7 +70,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	private static int registry_port_number;
 
 	/**
-	 * Museum server start, requires 3 argument.
+	 * Museum server start, requires 2 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
@@ -101,8 +101,8 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Museum", self);
 			GenericIO.writelnString("Museum bound!");
 		} catch (RemoteException ex) {
-			GenericIO.writelnString("Museum exception: " + ex.getMessage());
-			ex.printStackTrace();
+			GenericIO.writelnString("Regist exception: " + ex.getMessage());
+			System.exit(1);
 		}
 		// log full update
 		try {
@@ -110,10 +110,10 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 					.logLine_MuseumUpdateFull(self.rooms_paintings, self.rooms_distance);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (main log line): " + ex.getMessage());
-			ex.printStackTrace();
+			System.exit(1);
 		} catch (NotBoundException ex) {
 			GenericIO.writelnString("Not Bound Exception (main log line):  " + ex.getMessage());
-			ex.printStackTrace();
+			System.exit(1);
 		}
 		// ready message
 		GenericIO.writelnString("Museum server ready!");
@@ -128,7 +128,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	 * @return room_distance array containing every room distance
 	 */
 	@Override
-	public synchronized int[] startOperations() {
+	public synchronized int[] startOperations() throws RemoteException {
 		return rooms_distance;
 	}
 
@@ -152,7 +152,7 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 	 * </ul>
 	 */
 	@Override
-	public synchronized int rollACanvas(int thief_id, int target_room) {
+	public synchronized int rollACanvas(int thief_id, int target_room) throws RemoteException {
 		int stolen_canvas = 0;
 		// checks if room is not empty, if so decrements number of room canvas by one and increments stolen cnavas
 		if (this.rooms_paintings[target_room] != 0) {
@@ -165,10 +165,10 @@ public class Museum extends UnicastRemoteObject implements It_MasterThief_Museum
 					.logLine_MuseumUpdateSingle(target_room, self.rooms_paintings[target_room]);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (roll_a_canvas): " + ex.getMessage());
-			ex.printStackTrace();
+			System.exit(1);
 		} catch (NotBoundException ex) {
 			GenericIO.writelnString("Not Bound Exception (roll_a_canvas):  " + ex.getMessage());
-			ex.printStackTrace();
+			System.exit(1);
 		}
 		// returns stolen canvas
 		return stolen_canvas;

@@ -10,7 +10,10 @@ import heist.enums.State_MasterThief;
 import heist.enums.State_Thief;
 import heist.repository.interfaces.It_Repository_AssaultParty;
 import heist.repository.interfaces.It_Repository_ConcentrationSite;
+import heist.repository.interfaces.It_Repository_ControlSite;
+import heist.repository.interfaces.It_Repository_MasterThief;
 import heist.repository.interfaces.It_Repository_Museum;
+import heist.repository.interfaces.It_Repository_Thief;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -25,8 +28,8 @@ import java.rmi.server.UnicastRemoteObject;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public class GeneralRepository extends UnicastRemoteObject implements It_Repository_Museum, It_Repository_ConcentrationSite, It_Repository_AssaultParty, 
-		Serializable {
+public class GeneralRepository extends UnicastRemoteObject implements It_Repository_Museum, It_Repository_ConcentrationSite, It_Repository_AssaultParty,
+		It_Repository_ControlSite, It_Repository_Thief, It_Repository_MasterThief, Serializable {
 
 	//========================================================================================================================//
 	// Museum Data
@@ -50,6 +53,13 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 * Teams member positions
 	 */
 	private final int[][] team_positions = new int[HeistSettings.TOTAL_TEAMS][HeistSettings.TEAM_SIZE];
+	//========================================================================================================================//
+	// Control Site Data
+	//========================================================================================================================//
+	/**
+	 * Total stolen canvas
+	 */
+	private int stolen_canvas;
 	//========================================================================================================================//
 	// Thief Data
 	//========================================================================================================================//
@@ -215,6 +225,21 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	}
 
 	//========================================================================================================================//
+	// Log Updates - ControlSite
+	//========================================================================================================================//
+	/**
+	 * Log line containing updated info over stolen canvas.
+	 *
+	 * @param stolen_canvas number of stolen canvas
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public synchronized final void logLine_ControlSiteUpdate(int stolen_canvas) throws RemoteException {
+		this.stolen_canvas = stolen_canvas;
+		logLine();
+	}
+
+	//========================================================================================================================//
 	// Log Updates - Museum
 	//========================================================================================================================//
 	/**
@@ -243,6 +268,71 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	@Override
 	public synchronized final void logLine_MuseumUpdateSingle(int room_index, int room_paintings) throws RemoteException {
 		this.rooms_paintings[room_index] = room_paintings;
+		logLine();
+	}
+
+	//========================================================================================================================//
+	// Log Updates - Thief
+	//========================================================================================================================//
+	/**
+	 * Log line containing full updated thief info.
+	 *
+	 * @param thief_id thief identification
+	 * @param assault_party_id thief assault party id
+	 * @param agility thief agility
+	 * @param stolen_canvas updated current number of canvas in hold
+	 * @param state updated thief state
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public synchronized final void logLine_ThiefUpdateFull(int thief_id, int assault_party_id, int agility, int stolen_canvas, State_Thief state) throws RemoteException {
+		this.thieves_states[thief_id] = state;
+		this.thieves_canvas[thief_id] = stolen_canvas;
+		this.thieves_agility[thief_id] = agility;
+		this.thieves_assault_party_id[thief_id] = assault_party_id;
+		logLine();
+	}
+
+	/**
+	 * Log line containing updated thief info over stolen canvas and state.
+	 *
+	 * @param thief_id thief identification
+	 * @param stolen_canvas updated current number of canvas in hold
+	 * @param state updated thief state
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public synchronized final void logLine_ThiefUpdateStateCanvas(int thief_id, int stolen_canvas, State_Thief state) throws RemoteException {
+		this.thieves_states[thief_id] = state;
+		this.thieves_canvas[thief_id] = stolen_canvas;
+		logLine();
+	}
+
+	/**
+	 * Log line containing updated thief info over its state.
+	 *
+	 * @param thief_id thief identification
+	 * @param state updated thief state
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public synchronized final void logLine_ThiefUpdateState(int thief_id, State_Thief state) throws RemoteException {
+		this.thieves_states[thief_id] = state;
+		logLine();
+	}
+
+	//========================================================================================================================//
+	// Log Updates - MasterThief
+	//========================================================================================================================//
+	/**
+	 * Log line containing updated master thief info over its state.
+	 *
+	 * @param state updated thief state
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public synchronized final void logLine_MasterThiefUpdateState(State_MasterThief state) throws RemoteException {
+		this.master_thief_state = state;
 		logLine();
 	}
 

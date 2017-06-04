@@ -3,13 +3,16 @@
  */
 package heist.museum.interfaces;
 
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
 /**
  * Contains the methods called by the thief in Museum.
  *
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public interface It_Thief_Museum {
+public interface It_Thief_Museum extends Remote {
 
 	/**
 	 * <p>
@@ -26,6 +29,7 @@ public interface It_Thief_Museum {
 	 * <li>1 if there where any canvas left</li>
 	 * <li>0 if room was already empty</li>
 	 * </ul>
+	 * @throws java.rmi.RemoteException
 	 */
-	public int rollACanvas(int thief_id, int target_room);
+	public int rollACanvas(int thief_id, int target_room) throws RemoteException;
 }

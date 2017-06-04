@@ -3,11 +3,12 @@
  */
 package heist.concentration_site;
 
-
 import genclass.GenericIO;
 import heist.concentration_site.interfaces.It_MasterThief_ConcentrationSite;
 import heist.concentration_site.interfaces.It_Thief_ConcentrationSite;
+import heist.repository.interfaces.It_Repository_ConcentrationSite;
 import java.io.Serializable;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
@@ -22,12 +23,12 @@ import settings.HeistSettings;
 public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implements It_MasterThief_ConcentrationSite, It_Thief_ConcentrationSite, Serializable {
 
 	//========================================================================================================================//
-	// Ordinary thieves data
+	// Concentration site data
 	//========================================================================================================================//
 	/**
 	 * Flag for heist completion
 	 */
-	public boolean heist_complete;
+	private boolean heist_complete;
 	/**
 	 * Flags for prepared teams
 	 */
@@ -36,22 +37,27 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	 * Prepared team member count
 	 */
 	private final int[] member_count = new int[HeistSettings.TOTAL_TEAMS];
-	//========================================================================================================================//
 
+	//========================================================================================================================//
+	// Concentration site constructor
+	//========================================================================================================================//
 	/**
 	 * Constructor for Ordinary Thieves Concentration Site, also forces initialisation of member_count at 0 and prepared_teams as false.
+	 *
 	 * @throws java.rmi.RemoteException
 	 */
-	public OrdinaryThievesConcentrationSite() throws RemoteException {
+	private OrdinaryThievesConcentrationSite() throws RemoteException {
 		super();
 		this.heist_complete = false;
-
 		for (int index = 0; index < HeistSettings.TOTAL_TEAMS; index++) {
 			this.prepared_teams[index] = false;
 			this.member_count[index] = 0;
 		}
 	}
 
+	//========================================================================================================================//
+	// Concentration site server info and main
+	//========================================================================================================================//
 	/**
 	 * Ordinary Thieves Concentration Site object reference [singleton]
 	 */
@@ -64,8 +70,9 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	 * Registry port number
 	 */
 	private static int registry_port_number;
+
 	/**
-	 * Ordinary Thieves Concentration Site server start, requires 3 argument.
+	 * Ordinary Thieves Concentration Site server start, requires 2 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
@@ -73,8 +80,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	 * <li>registry port number</li>
 	 * </ul>
 	 */
-	public static void main(String[] args){
-		
+	public static void main(String[] args) {
 		if (args.length != 2) {
 			GenericIO.writelnString("Wrong number of arguments!");
 			return;
@@ -84,6 +90,7 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 				registry_port_number = Integer.parseInt(args[1]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
+				System.exit(1);
 			}
 		}
 		// security manager
@@ -91,22 +98,19 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 			System.setSecurityManager(new SecurityManager());
 		}
 		GenericIO.writelnString("Security manager was installed!");
-		
-		// regist Ordinary Thieves Concentration Site
-		
+		// regist concentration site
 		try {
 			self = new OrdinaryThievesConcentrationSite();
-			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Ordinary Thieves Concentration Site", self);
-			GenericIO.writelnString("Ordinary Thieves Concentration Site bound!");
+			LocateRegistry.getRegistry(registry_host_name, registry_port_number).rebind("Concentration_Site", self);
+			GenericIO.writelnString("Concentration Site bound!");
 		} catch (RemoteException ex) {
-			GenericIO.writelnString("Ordinary Thieves Concentration Site exception: " + ex.getMessage());
-			ex.printStackTrace();
+			GenericIO.writelnString("Regist exception: " + ex.getMessage());
+			System.exit(1);
 		}
-		// log full update
-		
 		// ready message
 		GenericIO.writelnString("Ordinary Thieves Concentration Site server ready!");
 	}
+
 	//========================================================================================================================//
 	// Master thief methods
 	//========================================================================================================================//
@@ -124,7 +128,8 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 	}
 
 	/**
-	 * Sets heist_complete flag as true and notifies all thieves of this alteration setting them for termination. Finalises the log file by adding its finishing lines.
+	 * Sets heist_complete flag as true and notifies all thieves of this alteration setting them for termination. Finalises the log file by adding its finishing
+	 * lines.
 	 */
 	@Override
 	public synchronized void sumUpResults() {
@@ -133,15 +138,24 @@ public class OrdinaryThievesConcentrationSite extends UnicastRemoteObject implem
 		// notifies all thieves
 		notifyAll();
 		// finishes log
-		//repository.logFinish();
+		try {
+			((It_Repository_ConcentrationSite) LocateRegistry.getRegistry(registry_host_name, registry_port_number).lookup("General_Repository"))
+					.logFinish_ConcentrationSiteUpdate();
+		} catch (RemoteException ex) {
+			GenericIO.writelnString("Remote Exception (sum up results): " + ex.getMessage());
+			System.exit(1);
+		} catch (NotBoundException ex) {
+			GenericIO.writelnString("Not Bound Exception (sum up results):  " + ex.getMessage());
+			System.exit(1);
+		}
 	}
 
 	//========================================================================================================================//
 	// Thief methods
 	//========================================================================================================================//
 	/**
-	 * Sets thief in a waiting cycle where each time he is awoken checks if heist_complete flag is true, if not proceeds to verify if his team is in the prepared teams queue if
-	 * there are any on it. If he is the last team member to get ready, un-checks the team as prepared.
+	 * Sets thief in a waiting cycle where each time he is awoken checks if heist_complete flag is true, if not proceeds to verify if his team is in the
+	 * prepared teams queue if there are any on it. If he is the last team member to get ready, un-checks the team as prepared.
 	 *
 	 * Waiting cycle continues until:
 	 * <ul>

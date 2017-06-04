@@ -4,8 +4,8 @@
 package heist.assault_party;
 
 import genclass.GenericIO;
-import heist.assault_party.interfaces.It_Thief_AssaultParty;
 import heist.assault_party.interfaces.It_MasterThief_AssaultParty;
+import heist.assault_party.interfaces.It_Thief_AssaultParty;
 import heist.enums.State_Thief;
 import heist.repository.interfaces.It_Repository_AssaultParty;
 import java.io.Serializable;
@@ -25,7 +25,7 @@ import settings.HeistSettings;
 public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_AssaultParty, It_Thief_AssaultParty, Serializable {
 
 	//========================================================================================================================//
-	// Assault Party Data
+	// Assault party data
 	//========================================================================================================================//
 	/**
 	 * Assault party id
@@ -57,7 +57,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	private final int[] team_members = new int[HeistSettings.TOTAL_TEAMS];
 
 	//========================================================================================================================//
-	// Assault Party Constructor
+	// Assault party constructor
 	//========================================================================================================================//
 	/**
 	 * Constructor for the assault party.
@@ -76,7 +76,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	}
 
 	//========================================================================================================================//
-	// Assault Party server info and main
+	// Assault party server info and main
 	//========================================================================================================================//
 	/**
 	 * Random number generator
@@ -96,7 +96,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	private static int registry_port_number;
 
 	/**
-	 * AssaultParty server start, requires 3 argument.
+	 * AssaultParty server start, requires 2 argument.
 	 *
 	 * @param args program arguments should be:
 	 * <ul>
@@ -114,6 +114,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 				registry_port_number = Integer.parseInt(args[1]);
 			} catch (NumberFormatException ex) {
 				GenericIO.writelnString("Port number must be an integer!");
+				System.exit(1);
 			}
 		}
 		// security manager
@@ -121,7 +122,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 			System.setSecurityManager(new SecurityManager());
 		}
 		GenericIO.writelnString("Security manager was installed!");
-		// regist Assault Party 
+		// regist assault party 
 		try {
 			self = new AssaultParty[HeistSettings.TOTAL_TEAMS];
 			for (int index = 0; index < HeistSettings.TOTAL_TEAMS; index++) {
@@ -131,6 +132,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 			}
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Regist exception: " + ex.getMessage());
+			System.exit(1);
 		}
 		// ready message
 		GenericIO.writelnString("Assault Party server ready!");
@@ -160,8 +162,10 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 					.logLine_AssaultPartyUpdateRoom(this.id, target_room);
 		} catch (RemoteException ex) {
 			GenericIO.writelnString("Remote Exception (prepare assault party): " + ex.getMessage());
+			System.exit(1);
 		} catch (NotBoundException ex) {
 			GenericIO.writelnString("Not Bound Exception (prepare assault party):  " + ex.getMessage());
+			System.exit(1);
 		}
 	}
 
@@ -225,13 +229,12 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 * <li>8th - decides whenever he reached the room or continues to crawl to it.</li>
 	 * </ul>
 	 *
-	 * @param state thief state
 	 * @param thief_id thief reference
 	 * @param thief_agility thief agility
 	 * @return ThiefState next state as State_Thief.AT_A_ROOM or State_Thief.CRAWLING_INWARDS
 	 */
 	@Override
-	public synchronized State_Thief crawlIn(State_Thief state, int thief_id, int thief_agility) {
+	public synchronized State_Thief crawlIn(int thief_id, int thief_agility) {
 		int thief_index;
 		int advance;
 		// finds his position in the team
@@ -291,8 +294,10 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 						.logLine_AssaultPartyUpdatePositions(thief_id, this.team_members, this.team_distances);
 			} catch (RemoteException ex) {
 				GenericIO.writelnString("Remote Exception (crawl in): " + ex.getMessage());
+				System.exit(1);
 			} catch (NotBoundException ex) {
 				GenericIO.writelnString("Not Bound Exception (crawl in):  " + ex.getMessage());
+				System.exit(1);
 			}
 		}
 		// decides whenever he reached the room or continues to crawl to it
@@ -348,13 +353,12 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	 * <li>8th - decides whenever he reached the concentration site or continues to crawl to it.</li>
 	 * </ul>
 	 *
-	 * @param state thief state
 	 * @param thief_id thief reference
 	 * @param thief_agility thief agility
 	 * @return next state as return State_Thief.OUTSIDE or State_Thief.CRAWLING_OUTWARDS
 	 */
 	@Override
-	public synchronized State_Thief crawlOut(State_Thief state, int thief_id, int thief_agility) {
+	public synchronized State_Thief crawlOut(int thief_id, int thief_agility) {
 		int thief_index;
 		int advance;
 		// finds his position in team
@@ -414,8 +418,10 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 						.logLine_AssaultPartyUpdatePositions(thief_id, this.team_members, this.team_distances);
 			} catch (RemoteException ex) {
 				GenericIO.writelnString("Remote Exception (crawl out): " + ex.getMessage());
+				System.exit(1);
 			} catch (NotBoundException ex) {
 				GenericIO.writelnString("Not Bound Exception (crawl out):  " + ex.getMessage());
+				System.exit(1);
 			}
 		}
 		// decides whenever he reached the concentration site or continues to crawl to it

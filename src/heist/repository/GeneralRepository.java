@@ -112,6 +112,10 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 		}
 		// initialise master thief info
 		master_thief_state = State_MasterThief.PLANNING_THE_HEIST;
+		// initialise clocks
+		for (int index = 0; index < 1 + HeistSettings.TOTAL_THIEVES; index++) {
+			clocks[index] = new ClockVector();
+		}
 		// start log
 		logStart();
 	}
@@ -383,7 +387,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 	 * Ends the log by adding a fixed sentence and the legend.
 	 */
 	public synchronized final void logFinish() {
-		String end = String.format("My friends, tonight's effort produced %1$2d priceless paintings!\n", 0);
+		String end = String.format("My friends, tonight's effort produced %1$2d priceless paintings!\n", stolen_canvas);
 
 		log.openForAppending(null, log_name);
 		log.writeString(end, legendGenerator());
@@ -441,7 +445,7 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 		}
 		line_1 += "Vector Clocks";
 		line_2 += String.format("%1$4d", 1);
-		for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++){
+		for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++) {
 			line_2 += String.format(" %1$4d", index + 1);
 		}
 		line_3 += "Museum  ";
@@ -501,9 +505,9 @@ public class GeneralRepository extends UnicastRemoteObject implements It_Reposit
 						thief_index, team_positions[team_index][thief_index % HeistSettings.TEAM_SIZE], thieves_canvas[thief_index]);
 			}
 		}
-		
+
 		line_1 += String.format("%1$4d", clocks[0].getTime());
-		for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++){
+		for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++) {
 			line_1 += String.format(" %1$4d", clocks[index + 1].getTime());
 		}
 

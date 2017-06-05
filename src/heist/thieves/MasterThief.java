@@ -14,6 +14,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import heist.control_site.interfaces.It_MasterThief_ControlSite;
 import heist.repository.interfaces.It_Repository_MasterThief;
+import java.io.Serializable;
 import settings.HeistSettings;
 
 /**
@@ -22,7 +23,7 @@ import settings.HeistSettings;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public class MasterThief extends Thread {
+public class MasterThief extends Thread implements Serializable {
 
 	//========================================================================================================================//
 	// Master thief data

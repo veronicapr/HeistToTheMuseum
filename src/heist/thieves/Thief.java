@@ -11,6 +11,7 @@ import heist.control_site.interfaces.It_Thief_ControlSite;
 import heist.enums.State_Thief;
 import heist.museum.interfaces.It_Thief_Museum;
 import heist.repository.interfaces.It_Repository_Thief;
+import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -23,7 +24,7 @@ import settings.HeistSettings;
  * @author Verónica Rocha nmec 68809
  * @author Miguel Ferreira nmec 72583
  */
-public class Thief extends Thread {
+public class Thief extends Thread implements Serializable {
 
 	//========================================================================================================================//
 	// Thief data
@@ -153,7 +154,7 @@ public class Thief extends Thread {
 		try {
 			self = new Thief[HeistSettings.TOTAL_THIEVES];
 			for (int index = 0; index < HeistSettings.TOTAL_THIEVES; index++) {
-				self[index] = new Thief(index, index % HeistSettings.TEAM_SIZE);
+				self[index] = new Thief(index, index / HeistSettings.TEAM_SIZE);
 				self[index].clock.increment();
 				self[index].clock.updateTime(((It_Repository_Thief) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
 						.logLine_ThiefUpdateFull(self[index].clock.getTime(), self[index].id, self[index].assault_party_id, self[index].agility, self[index].stolen_canvas, self[index].state));
@@ -205,7 +206,7 @@ public class Thief extends Thread {
 							// depending on the order he either chooses to prepare for an excursion or goes to listen to the report
 							method_name = "OUTSIDE [wake type] - am i needed";
 							clock.increment();
-							wake_type = ((It_Thief_ConcentrationSite) LocateRegistry.getRegistry(concentration_site_host_name, registry_port_number).lookup("Conentration_Site"))
+							wake_type = ((It_Thief_ConcentrationSite) LocateRegistry.getRegistry(concentration_site_host_name, registry_port_number).lookup("Concentration_Site"))
 									.amINeeded(assault_party_id);
 							switch (wake_type) {
 								case 1:

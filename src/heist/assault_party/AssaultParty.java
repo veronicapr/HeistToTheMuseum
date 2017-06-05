@@ -55,7 +55,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 	/**
 	 * Team members id, ordered according to positions
 	 */
-	private final int[] team_members = new int[HeistSettings.TOTAL_TEAMS];
+	private final int[] team_members = new int[HeistSettings.TEAM_SIZE];
 
 	//========================================================================================================================//
 	// Assault party constructor
@@ -299,7 +299,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 			}
 			try {
 				((It_Repository_AssaultParty) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
-						.logLine_AssaultPartyUpdatePositions(thief_id, this.team_members, this.team_distances);
+						.logLine_AssaultPartyUpdatePositions(id, this.team_members, this.team_distances);
 			} catch (RemoteException ex) {
 				GenericIO.writelnString("Remote Exception (crawl in): " + ex.getMessage());
 				System.exit(1);
@@ -423,7 +423,7 @@ public class AssaultParty extends UnicastRemoteObject implements It_MasterThief_
 			}
 			try {
 				((It_Repository_AssaultParty) LocateRegistry.getRegistry(repository_host_name, registry_port_number).lookup("General_Repository"))
-						.logLine_AssaultPartyUpdatePositions(thief_id, this.team_members, this.team_distances);
+						.logLine_AssaultPartyUpdatePositions(id, this.team_members, this.team_distances);
 			} catch (RemoteException ex) {
 				GenericIO.writelnString("Remote Exception (crawl out): " + ex.getMessage());
 				System.exit(1);
